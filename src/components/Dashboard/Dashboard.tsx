@@ -25,7 +25,7 @@ const Dashboard = () => {
                     <Zap className="h-4 w-4" />
                   </Button>
                 </HoverCardTrigger>
-                <HoverCardContent className="w-80">
+                <HoverCardContent className="w-80 border-white dark:border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] dark:shadow-[0_0_15px_rgba(255,255,255,0.2)]">
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 border-b pb-2">
                       <Zap className="h-4 w-4 text-primary" />
