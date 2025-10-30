@@ -38,7 +38,7 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
     <div 
       className={`flex flex-col h-screen bg-card border-r sticky top-0 transition-all duration-300 ${
         isOpen ? 'w-56' : 'w-0 overflow-hidden'
-      }`}
+      } ${isOpen ? 'fixed md:sticky inset-0 z-40 md:z-auto' : ''}`}
     >
       {/* Logo/Brand */}
       <div className="p-4 border-b">
