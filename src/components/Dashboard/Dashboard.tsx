@@ -1,27 +1,76 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ExampleChart } from '@/components/Charts/ExampleChart'
 import { Button } from '@/components/ui/button'
-
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card"
+import { Zap } from "lucide-react"
 const Dashboard = () => {
   return (
-    <div className="space-y-6 p-4 md:p-6 bg-background">
+    <div className="w-full space-y-6 p-4 md:p-6 bg-background">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4 ml-14 md:ml-14">
+        <div className="flex items-center gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">LeetTrack</h1>
             <p className="text-muted-foreground mt-1 text-sm md:text-base">Track your coding journey</p>
           </div>
         </div>
-        <div className="flex gap-2 ml-14 sm:ml-0">
+        <div className="flex gap-2">
+            <HoverCard>
+                <HoverCardTrigger asChild>
+                  <Button variant="outline" size="sm" className="md:size-default">
+                    <Zap className="h-4 w-4" />
+                  </Button>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-80 border-white dark:border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] dark:shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 border-b pb-2">
+                      <Zap className="h-4 w-4 text-primary" />
+                      <span className="font-semibold">Streak Stats</span>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm text-muted-foreground">Current Streak</span>
+                          <span className="text-sm font-medium">15 days 🔥</span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-secondary">
+                          <div className="h-2 w-[75%] rounded-full bg-primary"></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm text-muted-foreground">Longest Streak</span>
+                          <span className="text-sm font-medium">28 days</span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-secondary">
+                          <div className="h-2 w-full rounded-full bg-primary"></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm text-muted-foreground">Weekly Goal</span>
+                          <span className="text-sm font-medium">12/15 problems</span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-secondary">
+                          <div className="h-2 w-[80%] rounded-full bg-primary"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </HoverCardContent>
+            </HoverCard>
           <Button variant="outline" size="sm" className="md:size-default">Export Stats</Button>
           <Button size="sm" className="md:size-default">Add Problem</Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      {/* Flexbox 1: Stats Cards - Total Solved, Easy, Medium, Hard */}
+      <div className="flex flex-col sm:flex-row gap-4 w-full">
+        <Card className="flex-1">
           <CardHeader>
             <CardDescription>Total Solved</CardDescription>
             <CardTitle className="text-2xl">245</CardTitle>
@@ -31,7 +80,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="flex-1">
           <CardHeader>
             <CardDescription>Easy Problems</CardDescription>
             <CardTitle className="text-2xl">145</CardTitle>
@@ -41,7 +90,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="flex-1">
           <CardHeader>
             <CardDescription>Medium Problems</CardDescription>
             <CardTitle className="text-2xl">87</CardTitle>
@@ -51,7 +100,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="flex-1">
           <CardHeader>
             <CardDescription>Hard Problems</CardDescription>
             <CardTitle className="text-2xl">13</CardTitle>
@@ -62,9 +111,9 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
-        <Card className="lg:col-span-4">
+      {/* Flexbox 2: Chart Section */}
+      <div className="flex w-full">
+        <Card className="flex-1 w-full">
           <CardHeader>
             <CardTitle>Solving Progress</CardTitle>
             <CardDescription>Monthly problem solving statistics</CardDescription>
@@ -73,8 +122,11 @@ const Dashboard = () => {
             <ExampleChart />
           </CardContent>
         </Card>
+      </div>
 
-        <Card className="lg:col-span-3">
+      {/* Flexbox 3: Recent Submissions and Streak Stats */}
+      <div className="flex flex-col lg:flex-row gap-4 w-full">
+        <Card className="flex-1">
           <CardHeader>
             <CardTitle>Recent Submissions</CardTitle>
             <CardDescription>Your latest solved problems</CardDescription>
@@ -106,84 +158,13 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Additional Stats */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
+        <Card className="flex-1">
           <CardHeader>
             <CardTitle>Streak Stats</CardTitle>
             <CardDescription>Your consistency metrics</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Current Streak</span>
-                <span className="text-sm font-medium">15 days 🔥</span>
-              </div>
-              <div className="h-2 w-full rounded-full bg-secondary">
-                <div className="h-2 w-[75%] rounded-full bg-primary"></div>
-              </div>
-              <div className="flex items-center justify-between mt-4">
-                <span className="text-sm text-muted-foreground">Longest Streak</span>
-                <span className="text-sm font-medium">28 days</span>
-              </div>
-              <div className="h-2 w-full rounded-full bg-secondary">
-                <div className="h-2 w-full rounded-full bg-primary"></div>
-              </div>
-              <div className="flex items-center justify-between mt-4">
-                <span className="text-sm text-muted-foreground">Weekly Goal</span>
-                <span className="text-sm font-medium">12/15 problems</span>
-              </div>
-              <div className="h-2 w-full rounded-full bg-secondary">
-                <div className="h-2 w-[80%] rounded-full bg-primary"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks and shortcuts</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
-              Random Problem
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Review Notes
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              View Achievements
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Generate Report
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Study Plan</CardTitle>
-            <CardDescription>Upcoming topics to focus on</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="rounded-lg bg-primary/10 p-3">
-                <p className="text-sm font-medium">Arrays & Hashing</p>
-                <p className="text-xs text-muted-foreground mt-1">5 problems remaining</p>
-              </div>
-              <div className="rounded-lg bg-secondary/50 p-3">
-                <p className="text-sm font-medium">Dynamic Programming</p>
-                <p className="text-xs text-muted-foreground mt-1">12 problems remaining</p>
-              </div>
-              <div className="rounded-lg bg-accent p-3">
-                <p className="text-sm font-medium">Graph Algorithms</p>
-                <p className="text-xs text-muted-foreground mt-1">8 problems remaining</p>
-              </div>
-            </div>
-          </CardContent>
+          
         </Card>
       </div>
     </div>
