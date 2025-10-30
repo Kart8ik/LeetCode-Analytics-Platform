@@ -4,23 +4,23 @@ import { Button } from '@/components/ui/button'
 
 const Dashboard = () => {
   return (
-    <div className="space-y-6 p-6 bg-background">
+    <div className="space-y-6 p-4 md:p-6 bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 ml-14">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4 ml-14 md:ml-14">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">LeetTrack</h1>
-            <p className="text-muted-foreground mt-1">Track your coding journey</p>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">LeetTrack</h1>
+            <p className="text-muted-foreground mt-1 text-sm md:text-base">Track your coding journey</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">Export Stats</Button>
-          <Button>Add Problem</Button>
+        <div className="flex gap-2 ml-14 sm:ml-0">
+          <Button variant="outline" size="sm" className="md:size-default">Export Stats</Button>
+          <Button size="sm" className="md:size-default">Add Problem</Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>
             <CardDescription>Total Solved</CardDescription>
@@ -63,8 +63,8 @@ const Dashboard = () => {
       </div>
 
       {/* Charts Section */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
+        <Card className="lg:col-span-4">
           <CardHeader>
             <CardTitle>Solving Progress</CardTitle>
             <CardDescription>Monthly problem solving statistics</CardDescription>
@@ -74,7 +74,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="col-span-3">
+        <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>Recent Submissions</CardTitle>
             <CardDescription>Your latest solved problems</CardDescription>
@@ -88,19 +88,19 @@ const Dashboard = () => {
                 { name: 'Binary Tree Paths', difficulty: 'Medium', time: '2 days ago', status: '✓' },
                 { name: 'Trapping Rain Water', difficulty: 'Hard', time: '3 days ago', status: '✓' },
               ].map((problem, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className={`flex size-9 items-center justify-center rounded-full font-semibold text-sm ${
+                <div key={i} className="flex items-center gap-2 sm:gap-4">
+                  <div className={`flex size-8 sm:size-9 items-center justify-center rounded-full font-semibold text-xs sm:text-sm shrink-0 ${
                     problem.difficulty === 'Easy' ? 'bg-green-500/10 text-green-600 dark:text-green-400' :
                     problem.difficulty === 'Medium' ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' :
                     'bg-red-500/10 text-red-600 dark:text-red-400'
                   }`}>
                     {problem.status}
                   </div>
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">{problem.name}</p>
-                    <p className="text-sm text-muted-foreground">{problem.difficulty}</p>
+                  <div className="flex-1 space-y-1 min-w-0">
+                    <p className="text-sm font-medium leading-none truncate">{problem.name}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{problem.difficulty}</p>
                   </div>
-                  <div className="text-xs text-muted-foreground">{problem.time}</div>
+                  <div className="text-xs text-muted-foreground hidden sm:block">{problem.time}</div>
                 </div>
               ))}
             </div>
@@ -109,7 +109,7 @@ const Dashboard = () => {
       </div>
 
       {/* Additional Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>Streak Stats</CardTitle>
