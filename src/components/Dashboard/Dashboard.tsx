@@ -64,7 +64,7 @@ const Dashboard = () => {
                 </HoverCardContent>
             </HoverCard>
           <Button variant="outline" size="sm" className="md:size-default">Export Stats</Button>
-          <Button size="sm" className="md:size-default">Add Problem</Button>
+          <Button variant="default" size="sm" className="md:size-default">Add Problem</Button>
         </div>
       </div>
 
