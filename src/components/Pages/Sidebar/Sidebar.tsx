@@ -8,9 +8,9 @@ import {
   SidebarHeader,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/Pages/ui/sidebar"
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/Pages/ui/button"
 import { Home, Inbox, Calendar, Search, Settings } from "lucide-react"
 import LogoIconBlackbg from "@/assets/images/icons/logo-icon-blackbg.png"
 import LogoIconWhitebg from "@/assets/images/icons/logo-icon-whitebg1.png"

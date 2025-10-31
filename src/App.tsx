@@ -1,7 +1,7 @@
 import './App.css'
-import { AppSidebar } from './components/Sidebar/Sidebar'
-import Dashboard from './components/Dashboard/Dashboard'
-import { SidebarProvider, SidebarTrigger } from './components/ui/sidebar'
+import { AppSidebar } from '@/components/Pages/Sidebar/Sidebar'
+import Dashboard from '@/components/Pages/Dashboard/Dashboard'
+import { SidebarProvider, SidebarTrigger } from '@/components/Pages/ui/sidebar'
 
 function App() {
   return (
