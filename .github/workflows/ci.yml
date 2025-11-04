@@ -19,11 +19,18 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v3
         with:
-            node-version: 20.19.0
+          node-version: 20.19.0
 
-
+      # 🧹 Step 2 — Clean reinstall with --force to rebuild native binaries (like Rollup)
       - name: Install dependencies
-        run: npm install
+        run: |
+          rm -rf node_modules
+          npm install --force
 
+      # 🧩 Step 3 — Verify Rollup installation before running tests
+      - name: Verify Rollup install
+        run: npx rollup --version
+
+      # 🧪 Run your Vitest test suite
       - name: Run tests
         run: npm test
