@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ExampleChart } from '@/components/Charts/ExampleChart'
+import { ExampleChart } from '@/components/ExampleChart'
 import { Button } from '@/components/ui/button'
 import {
   HoverCard,
