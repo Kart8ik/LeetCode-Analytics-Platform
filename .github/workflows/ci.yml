@@ -9,7 +9,7 @@ on:
       - '**'
 
 jobs:
-  build-and-test:
+  build-test-lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: 20.19.0
 
-      # Clean reinstall + rebuild native bindings
+      # 🧹 Clean install & rebuild native modules
       - name: Clean install all dependencies
         run: |
           rm -rf node_modules package-lock.json
@@ -32,5 +32,14 @@ jobs:
       - name: Verify Rollup install
         run: npx rollup --version
 
-      - name: Run tests
+      # 🧪 Run Tests with Coverage
+      - name: Run Tests
         run: npm test
+
+      # 🔍 Lint Stage (checks code quality)
+      - name: Run ESLint
+        run: npx eslint src
+
+      # 🔒 Security Check (basic vulnerability scan)
+      - name: Security Audit
+        run: npm audit --production
