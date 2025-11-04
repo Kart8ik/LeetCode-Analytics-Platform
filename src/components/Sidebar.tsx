@@ -73,7 +73,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="sidebar-header-container"><img 
-              src={LogoIconBlackbg} 
+            src={isDark ? LogoIconWhitebg : LogoIconBlackbg} 
               alt="LeetTrack Logo" 
 
               className="sidebar-logo-icon size-0.50 md:size-6 mr-2 rounded-md" 
