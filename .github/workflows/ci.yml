@@ -26,8 +26,11 @@ jobs:
           rm -rf node_modules
           npm install --force
 
-      - name: Rebuild LightningCSS binary
-        run: npm rebuild lightningcss --force
+      # 🧱 Force rebuild native binaries (LightningCSS & Rollup)
+      - name: Rebuild native modules
+        run: |
+          npm rebuild lightningcss --force
+          npm rebuild rollup --force
 
       - name: Verify Rollup install
         run: npx rollup --version
