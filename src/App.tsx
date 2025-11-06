@@ -1,7 +1,7 @@
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Dashboard from '@/components/Pages/Dashboard/Dashboard'
-import Leaderboard from '@/components/Pages/Leaderboard/Leaderboard'
+import Dashboard from '@/Pages/Dashboard'
+import Leaderboard from '@/Pages/Leaderboard'
 
 function App() {
   return (

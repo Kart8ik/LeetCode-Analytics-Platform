@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/Pages/ui/card'
-import { Button } from '@/components/Pages/ui/button'
-import { Input } from '@/components/Pages/ui/input'
-import { Separator } from '@/components/Pages/ui/separator'
-import { Trophy, Medal, Flame } from 'lucide-react'
-import TopNavbar from '@/components/Pages/Header/TopNavbar'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
+import { Trophy, Medal } from 'lucide-react'
+import TopNavbar from '@/components/TopNavbar'
 
 // Simple avatar fallback with initials
 function Avatar({ name }: { name: string }) {
@@ -22,21 +22,24 @@ function Avatar({ name }: { name: string }) {
 }
 
 // Row data shape
-type Leader = {
+type Leaderb = {
   id: number
   name: string
   handle: string
-  solved: number
+  easy: number
+  medium: number
+  hard: number
+  total: number
   streak: number
   lastSolve: string
 }
 
-const SAMPLE_DATA: Leader[] = [
-  { id: 1, name: 'Alice Johnson', handle: '@alice', solved: 312, streak: 21, lastSolve: '2h ago' },
-  { id: 2, name: 'Rahul Mehta', handle: '@rahul', solved: 289, streak: 15, lastSolve: '5h ago' },
-  { id: 3, name: 'Sofia Li', handle: '@sofia', solved: 275, streak: 30, lastSolve: '1h ago' },
-  { id: 4, name: 'Diego Martínez', handle: '@diego', solved: 241, streak: 7, lastSolve: '1d ago' },
-  { id: 5, name: 'Emily Chen', handle: '@emily', solved: 230, streak: 11, lastSolve: '3h ago' },
+const SAMPLE_DATA: Leaderb[] = [
+  { id: 1, name: 'Alice Johnson', handle: '@alice', easy: 150, medium: 120, hard: 42, total: 312, streak: 21, lastSolve: '2h ago' },
+  { id: 2, name: 'Rahul Mehta', handle: '@rahul', easy: 145, medium: 105, hard: 39, total: 289, streak: 15, lastSolve: '5h ago' },
+  { id: 3, name: 'Sofia Li', handle: '@sofia', easy: 140, medium: 98, hard: 37, total: 275, streak: 30, lastSolve: '1h ago' },
+  { id: 4, name: 'Diego Martínez', handle: '@diego', easy: 125, medium: 85, hard: 31, total: 241, streak: 7, lastSolve: '1d ago' },
+  { id: 5, name: 'Emily Chen', handle: '@emily', easy: 120, medium: 80, hard: 30, total: 230, streak: 11, lastSolve: '3h ago' },
 ]
 
 export default function Leaderboard() {
@@ -46,8 +49,8 @@ export default function Leaderboard() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     const base = [...SAMPLE_DATA]
-    // Sort by solved desc, then streak desc
-    base.sort((a, b) => (b.solved - a.solved) || (b.streak - a.streak))
+    // Sort by total desc, then streak desc
+    base.sort((a, b) => (b.total - a.total) || (b.streak - a.streak))
     if (!q) return base
     return base.filter((r) => r.name.toLowerCase().includes(q) || r.handle.toLowerCase().includes(q))
   }, [query])
@@ -70,29 +73,6 @@ export default function Leaderboard() {
           <div className="flex flex-col md:flex-row md:items-center gap-3 md:justify-between">
             <CardTitle className="text-xl">Rankings</CardTitle>
             <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-              <div className="inline-flex rounded-md bg-muted p-1">
-                <Button
-                  variant={range === 'week' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setRange('week')}
-                >
-                  This week
-                </Button>
-                <Button
-                  variant={range === 'month' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setRange('month')}
-                >
-                  This month
-                </Button>
-                <Button
-                  variant={range === 'all' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setRange('all')}
-                >
-                  All time
-                </Button>
-              </div>
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -115,9 +95,10 @@ export default function Leaderboard() {
                 <tr className="text-muted-foreground">
                   <th className="text-left font-normal pb-3">Rank</th>
                   <th className="text-left font-normal pb-3">User</th>
-                  <th className="text-right font-normal pb-3">Solved</th>
-                  <th className="text-right font-normal pb-3">Streak</th>
-                  <th className="text-right font-normal pb-3">Last solve</th>
+                  <th className="text-right font-normal pb-3">Easy</th>
+                  <th className="text-right font-normal pb-3">Medium</th>
+                  <th className="text-right font-normal pb-3">Hard</th>
+                  <th className="text-right font-normal pb-3">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -147,14 +128,10 @@ export default function Leaderboard() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 text-right font-medium">{row.solved}</td>
-                      <td className="py-3 text-right">
-                        <span className="inline-flex items-center gap-1">
-                          <Flame className={`h-4 w-4 ${row.streak >= 20 ? 'text-orange-500' : row.streak >= 10 ? 'text-amber-500' : 'text-muted-foreground'}`} />
-                          <span className="tabular-nums">{row.streak}d</span>
-                        </span>
-                      </td>
-                      <td className="py-3 text-right text-muted-foreground">{row.lastSolve}</td>
+                      <td className="py-3 text-right font-medium">{row.easy}</td>
+                      <td className="py-3 text-right font-medium">{row.medium}</td>
+                      <td className="py-3 text-right font-medium">{row.hard}</td>
+                      <td className="py-3 text-right font-semibold">{row.total}</td>
                     </tr>
                   )
                 })}

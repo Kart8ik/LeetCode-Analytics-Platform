@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/Pages/ui/button'
+import { Button } from '@/components/ui/button'
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from '@/components/Pages/ui/hover-card'
+} from '@/components/ui/hover-card'
 import { Sun, Moon, Zap } from 'lucide-react'
 
 export default function TopNavbar() {

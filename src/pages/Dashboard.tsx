@@ -1,12 +1,12 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/Pages/ui/card'
-import { ExampleChart } from '@/components/Pages/Charts/ExampleChart'
-import { Button } from '@/components/Pages/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ExampleChart } from '@/components/ExampleChart'
+import { Button } from '@/components/ui/button'
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "@/components/Pages/ui/hover-card"
+} from "@/components/ui/hover-card"
 import { Zap } from "lucide-react"
 import { Sun, Moon } from 'lucide-react'
 import { useEffect, useState } from 'react'

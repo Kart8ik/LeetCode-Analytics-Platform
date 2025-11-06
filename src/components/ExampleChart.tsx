@@ -10,13 +10,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/Pages/ui/card"
+} from "@/components/ui/card"
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/Pages/ui/chart"
-import type { ChartConfig } from "@/components/Pages/ui/chart"
+} from "@/components/ui/chart"
+import type { ChartConfig } from "@/components/ui/chart"
 
 
 const chartData = [

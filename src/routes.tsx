@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
-import Dashboard from '@/components/Pages/Dashboard/Dashboard';
+import Dashboard from '@/Pages/Dashboard';
 import App from './App';
-import Leaderboard from '@/components/Pages/Leaderboard/Leaderboard';
+import Leaderboard from '@/Pages/Leaderboard';
 
 export const router = createBrowserRouter([
   {
