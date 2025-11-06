@@ -53,7 +53,7 @@ export default function TopNavbar() {
         </div>
         
         {/* Navigation Buttons */}
-        <div className="inline-flex items-center gap-0 rounded-lg border-2 border-orange-500 p-1 bg-background">
+        <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary p-1 bg-background">
           <Link to="/">
             <Button 
               variant={location.pathname === '/' ? 'default' : 'ghost'} 
@@ -147,6 +147,7 @@ export default function TopNavbar() {
           </HoverCard>
 
           <Button size="sm" className="md:size-default">Get Custom Prompt</Button>
+          <Button size="sm" className="md:size-default" variant="outline">Logout</Button>
         </div>
       </div>
     </header>
