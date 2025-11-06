@@ -1,16 +1,18 @@
-import { AppSidebar } from '@/components/Sidebar'
-import Dashboard from '@/pages/Dashboard'
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Dashboard from '@/components/Pages/Dashboard/Dashboard'
+import Leaderboard from '@/components/Pages/Leaderboard/Leaderboard'
 
 function App() {
   return (
-    <SidebarProvider>
-      <AppSidebar />
+    <BrowserRouter>
       <main className="flex-1 w-full">
-        <SidebarTrigger />
-        <Dashboard />
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+        </Routes>
       </main>
-    </SidebarProvider>
+    </BrowserRouter>
   )
 }
 
