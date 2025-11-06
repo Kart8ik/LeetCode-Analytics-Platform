@@ -1,10 +1,15 @@
 import { useMemo, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
-import { Trophy, Medal } from 'lucide-react'
+import { Medal } from 'lucide-react'
 import TopNavbar from '@/components/TopNavbar'
+
+
+
+
+
+
 
 // Simple avatar fallback with initials
 function Avatar({ name }: { name: string }) {
@@ -34,6 +39,8 @@ type Leaderb = {
   lastSolve: string
 }
 
+
+
 const SAMPLE_DATA: Leaderb[] = [
   { id: 1, name: 'Alice Johnson', handle: '@alice', easy: 150, medium: 120, hard: 42, total: 312, streak: 21, lastSolve: '2h ago' },
   { id: 2, name: 'Rahul Mehta', handle: '@rahul', easy: 145, medium: 105, hard: 39, total: 289, streak: 15, lastSolve: '5h ago' },
@@ -58,16 +65,8 @@ export default function Leaderboard() {
   return (
     <>
       <TopNavbar />
-      <div className="w-full space-y-6 p-4 md:p-6 bg-background">
+      <div className="w-full space-y-6 px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6 bg-background">
       {/* Header */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3">
-          <Trophy className="h-6 w-6 text-yellow-500" />
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Leaderboard</h1>
-        </div>
-        <p className="text-muted-foreground">Track top performers by problems solved and streaks.</p>
-      </div>
-
       <Card>
         <CardHeader className="gap-4">
           <div className="flex flex-col md:flex-row md:items-center gap-3 md:justify-between">
