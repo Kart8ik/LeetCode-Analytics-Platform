@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card'
-import { Sun, Moon, Zap } from 'lucide-react'
+import { Sun, Moon, Zap, LayoutDashboard, Trophy } from 'lucide-react'
+import LogoLight from '@/assets/images/icons/logo-icon-whitebg1.png'
+import LogoDark from '@/assets/images/icons/logo-icon-blackbg.png'
 
 export default function TopNavbar() {
   const [isDark, setIsDark] = useState<boolean>(false)
+  const location = useLocation()
 
   useEffect(() => {
     try {
@@ -32,21 +36,51 @@ export default function TopNavbar() {
   }
 
   return (
-    <div className="w-full p-4 md:p-6 bg-background">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur border-b border-border shadow-sm">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4 md:px-6 py-4">
         <div className="flex items-center gap-3">
+          <img 
+            src={isDark ? LogoLight : LogoDark} 
+            alt="LeetTrack Logo" 
+            className="h-10 w-10 md:h-12 md:w-12 rounded-lg"
+          />
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">LeetTrack</h1>
-            <p className="text-muted-foreground mt-1 text-sm md:text-base">Track your coding journey</p>
+            <p className="text-muted-foreground mt-1 text-sm md:text-base">
+              Track your coding journey
+            </p>
           </div>
         </div>
+        
+        {/* Navigation Buttons */}
+        <div className="inline-flex items-center gap-0 rounded-lg border-2 border-orange-500 p-1 bg-background">
+          <Link to="/">
+            <Button 
+              variant={location.pathname === '/' ? 'default' : 'ghost'} 
+              size="sm"
+              className="gap-2 rounded-md"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Dashboard
+            </Button>
+          </Link>
+          <Link to="/leaderboard">
+            <Button 
+              variant={location.pathname === '/leaderboard' ? 'default' : 'ghost'} 
+              size="sm"
+              className="gap-2 rounded-md"
+            >
+              <Trophy className="h-4 w-4" />
+              Leaderboard
+            </Button>
+          </Link>
+        </div>
+
         <div className="flex items-center gap-3">
-          <Sun className="h-4 w-4 text-yellow-500" aria-hidden="true" />
           <button
             type="button"
             role="switch"
             aria-checked={isDark}
-            aria-label="Toggle theme"
             onClick={toggleTheme}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -54,13 +88,19 @@ export default function TopNavbar() {
                 toggleTheme()
               }
             }}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}
+            className={`relative inline-flex h-8 w-16 items-center justify-between px-1.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
+              isDark ? 'bg-slate-700' : 'bg-slate-300'
+            }`}
           >
+            <Sun className={`h-4 w-4 ${isDark ? 'text-slate-500' : 'text-yellow-500'} z-10`} aria-hidden="true" />
             <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${isDark ? 'translate-x-5' : 'translate-x-1'}`}
+              className={`absolute inline-block h-6 w-6 left-1 transform rounded-full bg-white shadow transition-transform ${
+                isDark ? 'translate-x-8' : 'translate-x-0'
+              }`}
             />
+            <Moon className={`h-4 w-4 ${isDark ? 'text-slate-200' : 'text-slate-500'} z-10`} aria-hidden="true" />
           </button>
-          <Moon className="h-4 w-4 text-slate-500" aria-hidden="true" />
+
           <HoverCard>
             <HoverCardTrigger asChild>
               <Button size="sm" className="md:size-default">
@@ -105,9 +145,10 @@ export default function TopNavbar() {
               </div>
             </HoverCardContent>
           </HoverCard>
+
           <Button size="sm" className="md:size-default">Get Custom Prompt</Button>
         </div>
       </div>
-    </div>
+    </header>
   )
 }
