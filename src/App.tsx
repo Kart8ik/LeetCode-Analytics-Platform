@@ -5,6 +5,7 @@ import Login from '@/pages/Login'
 import SignUp from '@/pages/SignUp'
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
+import { Toaster } from 'sonner'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -20,10 +21,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function App() {
+function Layout() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
@@ -43,9 +42,16 @@ function App() {
           />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Toaster richColors position="bottom-right" />
+      <AuthProvider>
+        <Layout/>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}

@@ -65,6 +65,8 @@ export default function SignUp() {
       },
     });
 
+    console.log(_signUpData);
+
     setLoading(false);
 
     if (error) {
@@ -146,7 +148,7 @@ export default function SignUp() {
                 <Input
                   type="text"
                   name="realName"
-                  placeholder="Abhishek Nair"
+                  placeholder="John Doe"
                   value={formData.realName}
                   onChange={handleChange}
                   className="h-12 bg-muted border-0"
@@ -201,6 +203,14 @@ export default function SignUp() {
               {loading ? "Signing up..." : "Sign up"}
             </Button>
           </form>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">or</span>
+              </div>
+            </div>
 
           <div className="text-center text-sm">
             <span className="text-muted-foreground">Already have an account? </span>
