@@ -1,13 +1,12 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AppSidebar } from '@/components/Sidebar'
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import Dashboard from '@/pages/Dashboard'
+import Leaderboard from '@/pages/Leaderboard'
 import Login from '@/pages/Login'
 import SignUp from '@/pages/SignUp'
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { Toaster } from 'sonner'
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute() {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -18,7 +17,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  return <Outlet />;
 }
 
 function Layout() {
@@ -26,20 +25,10 @@ function Layout() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <SidebarProvider>
-                  <AppSidebar />
-                  <main className="flex-1 w-full">
-                    <SidebarTrigger />
-                    <Dashboard />
-                  </main>
-                </SidebarProvider>
-              </ProtectedRoute>
-            }
-          />
+          <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+          </Route>
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
   )

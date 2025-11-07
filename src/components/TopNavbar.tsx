@@ -9,10 +9,14 @@ import {
 import { Sun, Moon, Zap, LayoutDashboard, Trophy } from 'lucide-react'
 import LogoLight from '@/assets/images/icons/logo-icon-whitebg1.png'
 import LogoDark from '@/assets/images/icons/logo-icon-blackbg.png'
+import { supabase } from '@/lib/supabase'
+import {toast} from 'sonner'
+import { useNavigate } from 'react-router-dom'
 
 export default function TopNavbar() {
   const [isDark, setIsDark] = useState<boolean>(false)
   const location = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => {
     try {
@@ -35,6 +39,17 @@ export default function TopNavbar() {
     else document.documentElement.classList.remove('dark')
   }
 
+  const handleLogout = async () => {
+    // Try a global sign-out first; if the session is missing/invalid, fall back to local
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      // console.error('Logout error:', error);
+      await supabase.auth.signOut({ scope: 'local' });
+    }
+    toast.success("Logged out");
+    navigate("/login");
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur border-b border-border shadow-sm">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4 md:px-6 py-4">
@@ -54,9 +69,9 @@ export default function TopNavbar() {
         
         {/* Navigation Buttons */}
         <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary p-1 bg-background">
-          <Link to="/">
+          <Link to="/dashboard">
             <Button 
-              variant={location.pathname === '/' ? 'default' : 'ghost'} 
+              variant={location.pathname === '/dashboard' ? 'default' : 'ghost'} 
               size="sm"
               className="gap-2 rounded-md"
             >
@@ -147,7 +162,7 @@ export default function TopNavbar() {
           </HoverCard>
 
           <Button size="sm" className="md:size-default">Get Custom Prompt</Button>
-          <Button size="sm" className="md:size-default" variant="outline">Logout</Button>
+          <Button size="sm" className="md:size-default" variant="outline" onClick={handleLogout}>Logout</Button>
         </div>
       </div>
     </header>
