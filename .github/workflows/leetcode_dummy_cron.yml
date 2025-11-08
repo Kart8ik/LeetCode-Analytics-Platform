@@ -4,7 +4,8 @@ on:
   schedule:
     - cron: "0 */2 * * *"   # every 2 hours
   push:
-    branches: [feat/integrate_cron]
+    branches: 
+    - 'feat/integrate_cron'
   workflow_dispatch:
 
 jobs:
