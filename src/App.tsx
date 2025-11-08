@@ -1,37 +1,46 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "@/components/TopNavbar";
-import Dashboard from "@/Pages/Dashboard";
-import Leaderboard from "@/Pages/Leaderboard";
-import { useAuth, AuthProvider } from "@/Context";
-import { Toaster } from "sonner";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import Dashboard from '@/pages/Dashboard'
+import Leaderboard from '@/pages/Leaderboard'
+import Login from '@/pages/Login'
+import SignUp from '@/pages/SignUp'
+import { AuthProvider, useAuth } from '@/context/AuthContext'
+import { Toaster } from 'sonner'
+
+function ProtectedRoute() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Outlet />;
+}
 
 function Layout() {
-  const { session, loading } = useAuth();
-
-  if (loading) return <div>Loading...</div>;
-
-  const showNavbar = !!session;
-
   return (
-    <div className="min-h-screen w-screen flex flex-col bg-background overflow-hidden">
-      {showNavbar && <Navbar />} {/* consistent top bar across all pages */}
-      <main className="h-full w-full flex-1 overflow-hidden">
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+          </Route>
+          <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
-      </main>
-    </div>
-  );
+  )
 }
 
 export default function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Toaster richColors position="bottom-right" />
       <AuthProvider>
-        <Layout />
+        <Layout/>
       </AuthProvider>
-    </Router>
+    </BrowserRouter>
   );
 }

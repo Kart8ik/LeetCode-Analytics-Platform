@@ -1,14 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Medal } from 'lucide-react'
 import TopNavbar from '@/components/TopNavbar'
-
-
-
-
-
+import { Button } from '@/components/ui/button'
+import { useAuth } from '@/context/AuthContext'
 
 
 // Simple avatar fallback with initials
@@ -51,8 +48,8 @@ const SAMPLE_DATA: Leaderb[] = [
 
 export default function Leaderboard() {
   const [query, setQuery] = useState('')
-  const [range, setRange] = useState<'week' | 'month' | 'all'>('month')
-
+  const { role } = useAuth();
+  console.log('role', role);
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     const base = [...SAMPLE_DATA]
@@ -66,80 +63,76 @@ export default function Leaderboard() {
     <>
       <TopNavbar />
       <div className="w-full space-y-6 px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6 bg-background">
-      {/* Header */}
-      <Card>
-        <CardHeader className="gap-4">
-          <div className="flex flex-col md:flex-row md:items-center gap-3 md:justify-between">
-            <CardTitle className="text-xl">Rankings</CardTitle>
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search users..."
-                className="w-full sm:w-64"
-              />
+        {/* Header */}
+        <Card>
+          <CardHeader className="gap-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-3 md:justify-between">
+              <CardTitle className="text-xl">Rankings</CardTitle>
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                {role === 'admin' && <Button variant="default">Download CSV</Button>}
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search users..."
+                  className="w-full sm:w-64"
+                />
+              </div>
             </div>
-          </div>
-          <CardDescription>
-            {range === 'week' && 'Showing weekly leaderboard'}
-            {range === 'month' && 'Showing monthly leaderboard'}
-            {range === 'all' && 'Showing all-time leaderboard'}
-          </CardDescription>
-        </CardHeader>
-        <Separator />
-        <CardContent className="pt-6">
-          <div className="overflow-x-auto">
-            <table className="min-w-[700px] w-full text-sm">
-              <thead>
-                <tr className="text-muted-foreground">
-                  <th className="text-left font-normal pb-3">Rank</th>
-                  <th className="text-left font-normal pb-3">User</th>
-                  <th className="text-right font-normal pb-3">Easy</th>
-                  <th className="text-right font-normal pb-3">Medium</th>
-                  <th className="text-right font-normal pb-3">Hard</th>
-                  <th className="text-right font-normal pb-3">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((row, idx) => {
-                  const rank = idx + 1
-                  return (
-                    <tr key={row.id} className="border-b last:border-0">
-                      <td className="py-3">
-                        <div className="flex items-center gap-2">
-                          {rank === 1 ? (
-                            <Medal className="h-4 w-4 text-yellow-500" />
-                          ) : rank === 2 ? (
-                            <Medal className="h-4 w-4 text-gray-400" />
-                          ) : rank === 3 ? (
-                            <Medal className="h-4 w-4 text-amber-700" />
-                          ) : (
-                            <span className="text-muted-foreground">{rank}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3">
-                        <div className="flex items-center gap-3">
-                          <Avatar name={row.name} />
-                          <div className="flex flex-col">
-                            <span className="font-medium text-foreground">{row.name}</span>
-                            <span className="text-xs text-muted-foreground">{row.handle}</span>
+          </CardHeader>
+          <Separator />
+          <CardContent className="pt-6">
+            <div className="overflow-x-auto">
+              <table className="min-w-[700px] w-full text-sm">
+                <thead>
+                  <tr className="text-muted-foreground">
+                    <th className="text-left font-normal pb-3">Rank</th>
+                    <th className="text-left font-normal pb-3">User</th>
+                    <th className="text-right font-normal pb-3">Easy</th>
+                    <th className="text-right font-normal pb-3">Medium</th>
+                    <th className="text-right font-normal pb-3">Hard</th>
+                    <th className="text-right font-normal pb-3">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((row, idx) => {
+                    const rank = idx + 1
+                    return (
+                      <tr key={row.id} className="border-b last:border-0">
+                        <td className="py-3">
+                          <div className="flex items-center gap-2">
+                            {rank === 1 ? (
+                              <Medal className="h-4 w-4 text-yellow-500" />
+                            ) : rank === 2 ? (
+                              <Medal className="h-4 w-4 text-gray-400" />
+                            ) : rank === 3 ? (
+                              <Medal className="h-4 w-4 text-amber-700" />
+                            ) : (
+                              <span className="text-muted-foreground">{rank}</span>
+                            )}
                           </div>
-                        </div>
-                      </td>
-                      <td className="py-3 text-right font-medium">{row.easy}</td>
-                      <td className="py-3 text-right font-medium">{row.medium}</td>
-                      <td className="py-3 text-right font-medium">{row.hard}</td>
-                      <td className="py-3 text-right font-semibold">{row.total}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+                        </td>
+                        <td className="py-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar name={row.name} />
+                            <div className="flex flex-col">
+                              <span className="font-medium text-foreground">{row.name}</span>
+                              <span className="text-xs text-muted-foreground">{row.handle}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 text-right font-medium">{row.easy}</td>
+                        <td className="py-3 text-right font-medium">{row.medium}</td>
+                        <td className="py-3 text-right font-medium">{row.hard}</td>
+                        <td className="py-3 text-right font-semibold">{row.total}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </>
   )
 }
