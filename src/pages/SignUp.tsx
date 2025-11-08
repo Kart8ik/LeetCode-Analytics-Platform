@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
-import logoIcon from "@/assets/images/icons/logo-icon-whitebg1.png";
 import { supabase } from "@/lib/supabase";
+import LoginNavbar from "@/components/LoginNavbar";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -81,14 +81,7 @@ export default function SignUp() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Logo at top left */}
-      <div className="absolute top-6 left-6 z-10">
-        <img 
-          src={logoIcon} 
-          alt="LT Logo" 
-          className="w-12 h-12 object-contain"
-        />
-      </div>
+      <LoginNavbar />
 
       <div className="flex flex-1">
         {/* Left side - Empty space (60%) */}

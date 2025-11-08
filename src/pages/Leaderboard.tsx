@@ -1,14 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Medal } from 'lucide-react'
 import TopNavbar from '@/components/TopNavbar'
-
-
-
-
-
+import { Button } from '@/components/ui/button'
+import { useAuth } from '@/context/AuthContext'
 
 
 // Simple avatar fallback with initials
@@ -51,8 +48,8 @@ const SAMPLE_DATA: Leaderb[] = [
 
 export default function Leaderboard() {
   const [query, setQuery] = useState('')
-  const [range, setRange] = useState<'week' | 'month' | 'all'>('month')
-
+  const { role } = useAuth();
+  console.log('role', role);
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     const base = [...SAMPLE_DATA]
@@ -72,6 +69,7 @@ export default function Leaderboard() {
             <div className="flex flex-col md:flex-row md:items-center gap-3 md:justify-between">
               <CardTitle className="text-xl">Rankings</CardTitle>
               <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                {role === 'admin' && <Button variant="default">Download CSV</Button>}
                 <Input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -80,11 +78,6 @@ export default function Leaderboard() {
                 />
               </div>
             </div>
-            <CardDescription>
-              {range === 'week' && 'Showing weekly leaderboard'}
-              {range === 'month' && 'Showing monthly leaderboard'}
-              {range === 'all' && 'Showing all-time leaderboard'}
-            </CardDescription>
           </CardHeader>
           <Separator />
           <CardContent className="pt-6">

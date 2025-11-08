@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom'
 
 export default function TopNavbar() {
   const [isDark, setIsDark] = useState<boolean>(false)
+  const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false)
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -40,14 +41,22 @@ export default function TopNavbar() {
   }
 
   const handleLogout = async () => {
-    // Try a global sign-out first; if the session is missing/invalid, fall back to local
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      // console.error('Logout error:', error);
-      await supabase.auth.signOut({ scope: 'local' });
+    if (isLoggingOut) return
+
+    setIsLoggingOut(true)
+    try {
+      // Try a global sign-out first; if the session is missing/invalid, fall back to local
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        await supabase.auth.signOut({ scope: 'local' })
+      }
+      toast.success('Logged out')
+      navigate('/login')
+    } catch {
+      toast.error('Failed to log out. Please try again.')
+    } finally {
+      setIsLoggingOut(false)
     }
-    toast.success("Logged out");
-    navigate("/login");
   }
 
   return (
@@ -62,7 +71,7 @@ export default function TopNavbar() {
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">LeetTrack</h1>
             <p className="text-muted-foreground mt-1 text-sm md:text-base">
-              Track your coding journey
+              Track your coding journey with your friends
             </p>
           </div>
         </div>
@@ -162,7 +171,15 @@ export default function TopNavbar() {
           </HoverCard>
 
           <Button size="sm" className="md:size-default">Get Custom Prompt</Button>
-          <Button size="sm" className="md:size-default" variant="outline" onClick={handleLogout}>Logout</Button>
+          <Button
+            size="sm"
+            className="md:size-default"
+            variant="outline"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+          >
+            {isLoggingOut ? 'Logging out...' : 'Logout'}
+          </Button>
         </div>
       </div>
     </header>
