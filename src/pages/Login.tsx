@@ -85,11 +85,6 @@ export default function Login() {
                 required
               />
             </div>
-              <div className="flex items-center justify-end text-sm">
-                <Link to="/forgot-password" className="text-[#FF6B35] hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
 
             <Button
               type="submit"
