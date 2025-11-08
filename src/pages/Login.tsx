@@ -59,7 +59,7 @@ export default function Login() {
 
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">Welcome back!</h1>
-            <p className="text-sm text-muted-foreground">Your username or email</p>
+            <p className="text-sm text-muted-foreground">Your email</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

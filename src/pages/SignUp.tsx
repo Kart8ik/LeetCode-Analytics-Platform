@@ -97,7 +97,7 @@ export default function SignUp() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Username</label>
+              <label className="text-sm font-medium">LeetCodeUsername</label>
               <Input
                 type="text"
                 name="username"
