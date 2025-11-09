@@ -220,7 +220,6 @@ export default function TopNavbar() {
             </p>
           </div>
         </div>
-        {role === 'user' && ( // admin can see only leaderboard
           <>
         {/* Navigation Buttons */}
         <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary p-1 bg-background">
@@ -246,7 +245,6 @@ export default function TopNavbar() {
           </Link>
         </div>
         </>
-        )}
 
         <div className="flex items-center gap-3">
           <button

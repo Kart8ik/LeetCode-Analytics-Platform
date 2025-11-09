@@ -42,11 +42,6 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   useEffect(() => {
-    if (role === 'admin') {
-      navigate('/leaderboard')
-      return
-    }
-
     const fetchUserDetails = async () => {
       if (!user?.id) return
       setIsLoading(true)

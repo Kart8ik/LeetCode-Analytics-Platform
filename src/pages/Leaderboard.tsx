@@ -179,13 +179,13 @@ export default function Leaderboard() {
       <div className="w-full space-y-6 px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6 bg-background">
         <Card>
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="text-2xl font-semibold tracking-tight">🏆 Leaderboard</CardTitle>
+            <CardTitle className="text-2xl font-semibold tracking-tight">Leaderboard</CardTitle>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <Input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Search name, section, or semester..."
+                placeholder="Search by name"
                 className="w-full sm:w-64"
               />
 
