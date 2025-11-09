@@ -6,7 +6,6 @@ import TopNavbar from '@/components/TopNavbar'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { useNavigate } from 'react-router-dom'
 import { Flame, Calendar } from 'lucide-react'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { Button } from '@/components/ui/button'
@@ -33,9 +32,8 @@ interface LanguageStat {
 }
 
 const Dashboard = () => {
-  const { user, role } = useAuth()
+  const { user} = useAuth()
   const [userDetails, setUserDetails] = useState<any>(null)
-  const navigate = useNavigate()
 
   // Format user details as a chatbot prompt
   const formattedPrompt = useMemo(() => {
@@ -228,12 +226,6 @@ Based on this profile, please provide personalized coding practice recommendatio
     }
   }
   useEffect(() => {
-
-    if (role === 'admin') {
-      navigate('/leaderboard')
-      return
-    }
-    console.log("user data in dashboard", user)
     const fetchUserDetails = async () => {
       const { data, error } = await supabase.rpc('get_user_details', {
         p_user_id: user?.id

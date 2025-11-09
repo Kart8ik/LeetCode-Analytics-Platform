@@ -59,8 +59,23 @@ export default function Leaderboard() {
         toast.error('Failed to fetch leaderboard')
       } finally {
         setIsLoading(false)
+      setIsLoading(true)
+      try {
+        const { data, error } = await supabase.rpc('get_leaderboard_json')
+        if (error) {
+          toast.error(error.message)
+        } else {
+          setLeaderboard(data || [])
+          toast.success('Leaderboard fetched successfully')
+        }
+      } catch {
+        toast.error('Failed to fetch leaderboard')
+      } finally {
+        setIsLoading(false)
       }
     }
+    }
+
 
     fetchLeaderboard()
   }, [])

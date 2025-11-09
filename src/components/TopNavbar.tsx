@@ -25,7 +25,9 @@ export default function TopNavbar() {
       setIsDark(initial)
       if (initial) document.documentElement.classList.add('dark')
       else document.documentElement.classList.remove('dark')
-    } catch {}
+    } catch {
+      // ignore theme read errors
+    }
   }, [])
  
   const toggleTheme = () => {
@@ -33,7 +35,9 @@ export default function TopNavbar() {
     setIsDark(next)
     try {
       localStorage.setItem('theme', next ? 'dark' : 'light')
-    } catch {}
+    } catch {
+      // ignore localStorage write errors
+    }
     if (next) document.documentElement.classList.add('dark')
     else document.documentElement.classList.remove('dark')
   }
@@ -78,36 +82,11 @@ export default function TopNavbar() {
             </p>
           </div>
         </div>
-        {role === 'user' && ( // admin can see only leaderboard
+        {role === 'user' && (
           <>
         {/* Navigation Buttons - Centered on desktop, below logo on mobile */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden sm:flex">
           <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary p-1 bg-background">
-            <Link to="/dashboard">
-              <Button 
-                variant={location.pathname === '/dashboard' ? 'default' : 'ghost'} 
-                size="sm"
-                className="gap-2 rounded-md"
-              >
-                <LayoutDashboard className="h-4 w-4" />
-                Dashboard
-              </Button>
-            </Link>
-            <Link to="/leaderboard">
-              <Button 
-                variant={location.pathname === '/leaderboard' ? 'default' : 'ghost'} 
-                size="sm"
-                className="gap-2 rounded-md"
-              >
-                <Trophy className="h-4 w-4" />
-                Leaderboard
-              </Button>
-            </Link>
-          </div>
-        </div>
-        {/* Mobile Navigation Buttons */}
-        <div className="flex sm:hidden w-full">
-          <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary p-1 bg-background mx-auto">
             <Link to="/dashboard">
               <Button 
                 variant={location.pathname === '/dashboard' ? 'default' : 'ghost'} 

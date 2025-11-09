@@ -437,6 +437,8 @@ function SidebarGroupAction({
   )
 }
 
+/* eslint-disable react-refresh/only-export-components */
+
 function SidebarGroupContent({
   className,
   ...props

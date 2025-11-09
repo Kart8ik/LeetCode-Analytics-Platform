@@ -15,7 +15,9 @@ export default function TopNavbar() {
       setIsDark(initial)
       if (initial) document.documentElement.classList.add('dark')
       else document.documentElement.classList.remove('dark')
-    } catch {}
+    } catch {
+      // ignore storage/read errors
+    }
   }, [])
 
   const toggleTheme = () => {
@@ -23,7 +25,9 @@ export default function TopNavbar() {
     setIsDark(next)
     try {
       localStorage.setItem('theme', next ? 'dark' : 'light')
-    } catch {}
+    } catch {
+      // ignore localStorage write errors (private mode, etc.)
+    }
     if (next) document.documentElement.classList.add('dark')
     else document.documentElement.classList.remove('dark')
   }
