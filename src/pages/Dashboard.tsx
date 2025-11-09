@@ -1,83 +1,132 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ExampleChart } from '@/components/ExampleChart'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import TopNavbar from '@/components/TopNavbar'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
+import LoadingSpinner from '@/components/ui/loading'
+
+type UserDetails = {
+  real_name?: string
+  username?: string
+  section?: string | number
+  semester?: string | number
+  problem_stats?: {
+    easy?: number
+    medium?: number
+    hard?: number
+    total?: number
+    total_solved?: number
+    easy_solved?: number
+    medium_solved?: number
+    hard_solved?: number
+  }
+  progress_stats?: {
+    weekly_solved?: number
+    weekly_goal?: number
+    monthly_solved?: number
+    streak_count?: number
+    longest_streak?: number
+  }
+  total_solved?: number
+  streak_count?: number
+}
 
 const Dashboard = () => {
   const { user, role } = useAuth()
   const navigate = useNavigate()
-  useEffect(() => {
+  const [details, setDetails] = useState<UserDetails | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
+  useEffect(() => {
     if (role === 'admin') {
       navigate('/leaderboard')
       return
     }
-    console.log("user data in dashboard", user)
+
     const fetchUserDetails = async () => {
-      const { data, error } = await supabase.rpc('get_user_details', {
-        p_user_id: user?.id
-      })
-      if (error){
-        toast.error(error.message)
-      } else {
-        toast.success("User details fetched successfully")
-        console.log("user details", data)
+      if (!user?.id) return
+      setIsLoading(true)
+      try {
+        const { data, error } = await supabase.rpc('get_user_details', {
+          p_user_id: user.id,
+        })
+        if (error) {
+          // permission or other error
+          toast.error(error.message)
+          return
+        }
+
+        const payload = Array.isArray(data) ? data[0] : data
+        if (!payload) {
+          setDetails(null)
+          toast.error('No user data returned')
+          return
+        }
+
+        setDetails(payload)
+        toast.success('User details fetched successfully')
+      } catch {
+        toast.error('Failed to fetch user details')
+      } finally {
+        setIsLoading(false)
       }
     }
-    if (user?.id) {
-      fetchUserDetails()
-    }
-  }, [user])
+
+    fetchUserDetails()
+  }, [user, role, navigate])
 
   return (
     <>
       <TopNavbar />
       <div className="w-full space-y-6 px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6 bg-background">
         {/* Header */}
+        <div className="mb-2">
+          <h2 className="text-lg font-semibold">{details?.real_name ?? details?.username ?? user?.email ?? 'Your dashboard'}</h2>
+          <div className="text-xs text-muted-foreground">{details ? `${details.semester ?? ''}${details.semester && details.section ? ' ' : ''}${details.section ?? ''}` : ''}</div>
+        </div>
         {/* Flexbox 1: Stats Cards - Total Solved, Easy, Medium, Hard */}
         <div className="flex flex-col sm:flex-row gap-4 w-full">
           <Card className="flex-1">
             <CardHeader>
               <CardDescription>Total Solved</CardDescription>
-              <CardTitle className="text-2xl">245</CardTitle>
+              <CardTitle className="text-2xl">{isLoading ? <LoadingSpinner size="sm" /> : (details?.problem_stats?.total ?? details?.problem_stats?.total_solved ?? details?.total_solved ?? ([details?.problem_stats?.easy, details?.problem_stats?.medium, details?.problem_stats?.hard].reduce((a:number,b: unknown) => a + Number(b ?? 0), 0) || '—'))}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground">+12 this week</p>
+              <p className="text-xs text-muted-foreground">{details?.progress_stats?.weekly_solved != null && details?.progress_stats?.weekly_goal != null ? `+${details.progress_stats.weekly_solved} this week` : '—'}</p>
             </CardContent>
           </Card>
 
           <Card className="flex-1">
             <CardHeader>
               <CardDescription>Easy Problems</CardDescription>
-              <CardTitle className="text-2xl">145</CardTitle>
+              <CardTitle className="text-2xl">{isLoading ? <LoadingSpinner size="sm" /> : (details?.problem_stats?.easy ?? details?.problem_stats?.easy_solved ?? '—')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground">59% completion</p>
+              <p className="text-xs text-muted-foreground">{details?.problem_stats ? `${Math.round(((details.problem_stats.easy ?? 0) / Math.max(1, details.problem_stats.total ?? (details.problem_stats.easy ??0) + (details.problem_stats.medium ??0) + (details.problem_stats.hard ??0))) * 100)}% completion` : '—'}</p>
             </CardContent>
           </Card>
 
           <Card className="flex-1">
             <CardHeader>
               <CardDescription>Medium Problems</CardDescription>
-              <CardTitle className="text-2xl">87</CardTitle>
+              <CardTitle className="text-2xl">{isLoading ? <LoadingSpinner size="sm" /> : (details?.problem_stats?.medium ?? details?.problem_stats?.medium_solved ?? '—')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground">41% completion</p>
+              <p className="text-xs text-muted-foreground">{details?.problem_stats ? `${Math.round(((details.problem_stats.medium ?? 0) / Math.max(1, details.problem_stats.total ?? (details.problem_stats.easy ??0) + (details.problem_stats.medium ??0) + (details.problem_stats.hard ??0))) * 100)}% completion` : '—'}</p>
             </CardContent>
           </Card>
 
           <Card className="flex-1">
             <CardHeader>
               <CardDescription>Hard Problems</CardDescription>
-              <CardTitle className="text-2xl">13</CardTitle>
+              <CardTitle className="text-2xl">{isLoading ? <LoadingSpinner size="sm" /> : (details?.problem_stats?.hard ?? details?.problem_stats?.hard_solved ?? '—')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground">+3 this month</p>
+              <p className="text-xs text-muted-foreground">{details?.progress_stats?.monthly_solved != null ? `+${details.progress_stats.monthly_solved} this month` : '—'}</p>
             </CardContent>
           </Card>
         </div>
@@ -134,7 +183,32 @@ const Dashboard = () => {
               <CardTitle>Streak Stats</CardTitle>
               <CardDescription>Your consistency metrics</CardDescription>
             </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-muted-foreground">Current Streak</span>
+                    <span className="text-sm font-medium">{isLoading ? <LoadingSpinner size="sm" /> : (details?.progress_stats?.streak_count ?? details?.streak_count ?? '—')}</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-secondary">
+                    <div
+                      className="h-2 rounded-full bg-primary"
+                      style={{ width: `${Math.min(100, details?.progress_stats?.streak_count ? (Number(details.progress_stats.streak_count) / Math.max(1, Number(details.progress_stats.longest_streak ?? details.progress_stats.streak_count ?? 1))) * 100 : 0)}%` }}
+                    />
+                  </div>
+                </div>
 
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Longest Streak</span>
+                  <span className="text-sm font-medium">{details?.progress_stats?.longest_streak ?? '—'}</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Weekly Solved</span>
+                  <span className="text-sm font-medium">{details?.progress_stats?.weekly_solved ?? '—'}</span>
+                </div>
+              </div>
+            </CardContent>
           </Card>
         </div>
       </div>

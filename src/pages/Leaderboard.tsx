@@ -26,6 +26,8 @@ type LeaderboardUser = {
 
 export default function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [isFiltering, setIsFiltering] = useState<boolean>(false)
   const [query, setQuery] = useState('')
   const [sortColumn, setSortColumn] = useState<
     'global_rank' | 'total_solved' | 'easy_solved' | 'medium_solved' | 'hard_solved' | 'streak_count'
@@ -37,14 +39,22 @@ export default function Leaderboard() {
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
-      const { data, error } = await supabase.rpc('get_leaderboard_json')
-      if (error) {
-        toast.error(error.message)
-      } else {
-        setLeaderboard(data || [])
-        toast.success('Leaderboard fetched successfully')
+      setIsLoading(true)
+      try {
+        const { data, error } = await supabase.rpc('get_leaderboard_json')
+        if (error) {
+          toast.error(error.message)
+        } else {
+          setLeaderboard(data || [])
+          toast.success('Leaderboard fetched successfully')
+        }
+      } catch {
+        toast.error('Failed to fetch leaderboard')
+      } finally {
+        setIsLoading(false)
       }
     }
+
     fetchLeaderboard()
   }, [])
 
@@ -86,6 +96,15 @@ export default function Leaderboard() {
 
     return base
   }, [leaderboard, query, filterSection, filterSemester, sortColumn, sortOrder])
+
+  // Show a quick filtering indicator when query/filters/sort change
+  useEffect(() => {
+    // Don't show filtering overlay during initial load
+    if (isLoading) return
+    setIsFiltering(true)
+    const id = window.setTimeout(() => setIsFiltering(false), 180)
+    return () => clearTimeout(id)
+  }, [query, filterSection, filterSemester, sortColumn, sortOrder, leaderboard, isLoading])
 
   // Map of DB rank (position in the fetched leaderboard array)
   const dbRankMap = useMemo(() => {
@@ -230,8 +249,23 @@ export default function Leaderboard() {
 
           <Separator />
 
-          <CardContent className="pt-4 overflow-x-auto rounded-lg">
-            <table className="min-w-[900px] w-full border-collapse text-sm">
+          <CardContent className="pt-4 overflow-x-auto rounded-lg relative">
+            {isLoading ? (
+              <div className="py-20 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="inline-block rounded-full animate-spin border-4 border-gray-200 border-t-primary w-12 h-12" />
+                  <div className="mt-3 text-sm text-muted-foreground">Loading leaderboard…</div>
+                </div>
+              </div>
+            ) : (
+              <>
+                {isFiltering && (
+                  <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur flex items-center justify-center">
+                    <div className="inline-block rounded-full animate-spin border-4 border-gray-200 border-t-primary w-10 h-10" />
+                  </div>
+                )}
+
+                <table className={`min-w-[900px] w-full border-collapse text-sm ${isFiltering ? 'opacity-60' : ''}`}>
               <thead>
                 <tr className="text-muted-foreground bg-muted/40 text-center">
                   <th className="py-3 px-3 text-left">Rank</th>
@@ -307,6 +341,8 @@ export default function Leaderboard() {
                 })}
               </tbody>
             </table>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
