@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
-import Dashboard from '@/pages/Dashboard'
-import Leaderboard from '@/pages/Leaderboard'
-import Login from '@/pages/Login'
-import SignUp from '@/pages/SignUp'
+import Dashboard from '@/Pages/Dashboard'
+import Leaderboard from '@/Pages/Leaderboard'
+import Login from '@/Pages/Login'
+import SignUp from '@/Pages/SignUp'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { Toaster } from 'sonner'
 
