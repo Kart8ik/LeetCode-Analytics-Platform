@@ -124,10 +124,20 @@ export default function TopNavbar() {
         // Top languages/topics arrays (take up to 3 to show)
         try {
           const langs = Array.isArray(languages)
-            ? languages.slice(0, 3).map((l: any) => ({ language: l.language ?? l.name, solved: l.solved ?? l.count }))
+            ? languages.slice(0, 3).map((l: unknown) => {
+                const obj = l as Record<string, unknown>
+                const language = typeof obj.language === 'string' ? obj.language : typeof obj.name === 'string' ? obj.name : undefined
+                const solved = typeof obj.solved === 'number' ? obj.solved : typeof obj.count === 'number' ? obj.count : undefined
+                return { language, solved }
+              })
             : []
           const tpcs = Array.isArray(topics)
-            ? topics.slice(0, 3).map((t: any) => ({ topic: t.topic ?? t.name, count: t.count ?? t.solved }))
+            ? topics.slice(0, 3).map((t: unknown) => {
+                const obj = t as Record<string, unknown>
+                const topic = typeof obj.topic === 'string' ? obj.topic : typeof obj.name === 'string' ? obj.name : undefined
+                const count = typeof obj.count === 'number' ? obj.count : typeof obj.solved === 'number' ? obj.solved : undefined
+                return { topic, count }
+              })
             : []
           setTopLanguages(langs)
           setTopTopics(tpcs)
@@ -135,8 +145,8 @@ export default function TopNavbar() {
           setTopLanguages(null)
           setTopTopics(null)
         }
-      } catch (e) {
-        // ignore
+      } catch {
+        // ignore errors fetching hover data
       }
     }
     fetchStats()
@@ -153,7 +163,9 @@ export default function TopNavbar() {
       setIsDark(initial)
       if (initial) document.documentElement.classList.add('dark')
       else document.documentElement.classList.remove('dark')
-    } catch {}
+    } catch {
+      // ignore theme read errors
+    }
   }, [])
 
   const toggleTheme = () => {
@@ -161,7 +173,9 @@ export default function TopNavbar() {
     setIsDark(next)
     try {
       localStorage.setItem('theme', next ? 'dark' : 'light')
-    } catch {}
+    } catch {
+      // ignore localStorage write errors
+    }
     if (next) document.documentElement.classList.add('dark')
     else document.documentElement.classList.remove('dark')
   }
