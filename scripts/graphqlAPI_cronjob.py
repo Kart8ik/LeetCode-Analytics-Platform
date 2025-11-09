@@ -244,21 +244,46 @@ def fetch_and_push():
         user_id, uname = u["user_id"], u["username"]
         print(f"Fetching: {uname}")
         row = {"username": uname}
+
         try:
+            # --- Try full query first ---
             res = graphql_request(Q_fullUserData, {"username": uname, "limit": 15, "year": None})
             data = res.get("data", {})
             user = data.get("matchedUser")
 
+            # --- FALLBACK if full query fails ---
             if not user:
-                print(f"[WARN] Full query failed for {uname}, skipping user.")
-                continue
+                print(f"[WARN] Full query failed for {uname}, fetching partial data...")
 
-            # Parse all the same as your existing code
+                user = {}
+                # Run fallback queries individually to gather partial info
+                for qname, query in [
+                    ("profile", Q_userPublicProfile),
+                    ("submitStats", Q_userSessionProgress),
+                    ("tagProblemCounts", Q_skillStats),
+                    ("languageProblemCount", Q_languageStats),
+                    ("badges", Q_userBadges),
+                    ("userCalendar", Q_userProfileCalendar)
+                ]:
+                    try:
+                        partial = graphql_request(query, {"username": uname})
+                        matched = partial.get("data", {}).get("matchedUser")
+                        if matched:
+                            user.update(matched)
+                    except Exception as e:
+                        print(f"[WARN] Fallback query {qname} failed for {uname}: {e}")
+                    time.sleep(0.25)
+
+                # Fallback won't fetch recent submissions
+                data["recentAcSubmissionList"] = []
+
+            # --- Parse data (same logic for both full and fallback) ---
             prof = user.get("profile") or {}
             row["real_name"] = prof.get("realName")
             row["user_url"] = prof.get("userAvatar")
             row["rank"] = prof.get("ranking")
 
+            # Problem stats
             submit = user.get("submitStats") or {}
             ac = submit.get("acSubmissionNum") or []
             tot = submit.get("totalSubmissionNum") or []
@@ -272,9 +297,11 @@ def fetch_and_push():
                 round((total_ac / total_total) * 100.0, 2) if total_total else None
             )
 
+            # Language stats
             langs = user.get("languageProblemCount") or []
             row["language_stats_json"] = safe_json_dumps(langs)
 
+            # Topic stats
             tags = user.get("tagProblemCounts") or {}
             topics = []
             for lvl in ("advanced", "intermediate", "fundamental"):
@@ -286,14 +313,17 @@ def fetch_and_push():
                     })
             row["topic_stats_json"] = safe_json_dumps(topics)
 
+            # Badges
             badges = user.get("badges") or []
             row["badge_count"] = len(badges)
 
+            # Calendar
             cal = user.get("userCalendar") or {}
             row["streak_count"] = cal.get("streak")
             row["total_active_days"] = cal.get("totalActiveDays")
             row["submission_calendar_json"] = safe_json_dumps(cal.get("submissionCalendar"))
 
+            # Recent submissions (if full query succeeded)
             row["recent_submissions_json"] = safe_json_dumps(
                 data.get("recentAcSubmissionList") or []
             )
@@ -308,6 +338,7 @@ def fetch_and_push():
         time.sleep(REQUEST_DELAY)
 
     print("All users processed successfully.")
+
 
 if __name__ == "__main__":
     fetch_and_push()
