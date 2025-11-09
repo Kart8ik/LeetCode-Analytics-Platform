@@ -105,6 +105,11 @@ describe('AuthContext utilities and provider', () => {
     lib.supabase.auth.getSession = vi.fn().mockRejectedValue(new Error('boom'))
     lib.supabase.auth.onAuthStateChange = vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } })
 
+    // Silence expected console.error from AuthProvider when getSession fails to keep CI logs clean
+    const origConsoleError = console.error
+    // @ts-ignore
+    console.error = () => {}
+
     const TestConsumer = () => {
       const ctx = AuthModule.useAuth()
       return (
@@ -125,5 +130,9 @@ describe('AuthContext utilities and provider', () => {
     await waitFor(() => expect(screen.getByText(/loading:false/i)).toBeInTheDocument())
     expect(screen.getByText(/role:null/i)).toBeInTheDocument()
     expect(screen.getByText(/user:null/i)).toBeInTheDocument()
+
+    // restore console.error
+    // @ts-ignore
+    console.error = origConsoleError
   })
 })
