@@ -123,8 +123,7 @@ jobs:
         run: npm audit --json > security-report.json || true
 
       - name: Fail on high/critical vulnerabilities
-        run: |
-          node -e "const fs=require('fs');const r=JSON.parse(fs.readFileSync('security-report.json','utf8')||'{}');const meta=r.metadata||{};const vuln=meta.vulnerabilities||{};if((vuln.critical||0)>0||(vuln.high||0)>0){console.error('High/critical vulnerabilities found');process.exit(1)}else{console.log('No high/critical vulnerabilities')}
+        run: node ./scripts/check-security.cjs
 
       - name: Upload security report
         uses: actions/upload-artifact@v4
@@ -143,23 +142,23 @@ jobs:
       - name: Install zip (if needed)
         run: sudo apt-get update && sudo apt-get install -y zip || true
 
-      - name: Download artifacts (coverage, lint, security)
+      - name: Download coverage artifact
         uses: actions/download-artifact@v4
         with:
           name: coverage
-          path: coverage || true
+          path: coverage
 
       - name: Download lint report
         uses: actions/download-artifact@v4
         with:
           name: lint-report
-          path: . || true
+          path: .
 
       - name: Download security report
         uses: actions/download-artifact@v4
         with:
           name: security-report
-          path: . || true
+          path: .
 
       - name: Create deployment package
         run: |
