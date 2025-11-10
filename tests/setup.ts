@@ -61,6 +61,25 @@ vi.mock("@/lib/supabase", () => ({
   }
 })()
 
+// Polyfill scrollIntoView for JSDOM tests. Radix Select may call
+// element.scrollIntoView(...) and some virtual nodes or older JSDOM
+// environments can lack the function or have it non-callable.
+;(function polyfillScrollIntoView() {
+  try {
+    if (typeof window !== 'undefined' && window.HTMLElement) {
+      // @ts-ignore
+      if (typeof window.HTMLElement.prototype.scrollIntoView !== 'function') {
+        // @ts-ignore
+        window.HTMLElement.prototype.scrollIntoView = function () {
+          /* no-op in test env */
+        }
+      }
+    }
+  } catch (e) {
+    // ignore best-effort
+  }
+})()
+
 // Provide a default clipboard mock so tests that rely on navigator.clipboard
 // don't fail if they forget to set a per-test mock. Tests that need to assert
 // writeText can override this with their own spy.

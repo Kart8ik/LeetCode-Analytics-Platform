@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 
 import '../setup'
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select'
 
 describe('Select UI component', () => {
-  it('renders trigger with correct data attributes and shows value slot', () => {
+  it('renders trigger with correct data attributes and shows value slot', async () => {
     const { container } = render(
       <Select defaultValue="a">
         <SelectTrigger>
@@ -26,9 +26,17 @@ describe('Select UI component', () => {
       </Select>
     )
 
-    // Check that trigger and content slots exist
-    expect(container.querySelector('[data-slot="select-trigger"]')).toBeTruthy()
-    expect(container.querySelector('[data-slot="select-content"]')).toBeTruthy()
-    expect(container.querySelector('[data-slot="select-item"]')).toBeTruthy()
+    // Check that trigger slot exists
+    const trigger = container.querySelector('[data-slot="select-trigger"]')
+    expect(trigger).toBeTruthy()
+
+  // Open the select (content is portal-mounted and only appears when open)
+  fireEvent.click(trigger!)
+
+    // Wait for the portal-mounted content to appear in the document
+    await waitFor(() => {
+      expect(document.querySelector('[data-slot="select-content"]')).toBeTruthy()
+      expect(document.querySelector('[data-slot="select-item"]')).toBeTruthy()
+    })
   })
 })
