@@ -56,8 +56,44 @@ if (!found) {
   process.exit(2)
 }
 
-const totals = found.parsed.total || found.parsed
-const statements = totals.statements && totals.statements.pct
+let totals = found.parsed.total || found.parsed
+let statements = totals && totals.statements && totals.statements.pct
+
+// Special-case: Istanbul/nyc coverage-final.json format (per-file coverage object)
+if (typeof statements !== 'number') {
+  try {
+    // If the parsed object looks like coverage-final.json (keys are file paths, values have 's' or 'statementMap')
+    const firstVal = Object.values(found.parsed)[0]
+    if (firstVal && (firstVal.s || firstVal.statementMap)) {
+      let totalStatements = 0
+      let coveredStatements = 0
+      for (const fileKey of Object.keys(found.parsed)) {
+        const f = found.parsed[fileKey]
+        if (f && f.s) {
+          const counts = Object.values(f.s).map(n => Number(n) || 0)
+          totalStatements += counts.length
+          coveredStatements += counts.filter(c => c > 0).length
+        } else if (f && f.statementMap) {
+          // If statementMap exists but 's' counts not present, try to infer via other keys
+          const stmtCount = Object.keys(f.statementMap).length
+          totalStatements += stmtCount
+          // covered info may be under f.s; if missing assume 0 covered
+          if (f.s) {
+            const counts = Object.values(f.s).map(n => Number(n) || 0)
+            coveredStatements += counts.filter(c => c > 0).length
+          }
+        }
+      }
+      if (totalStatements > 0) {
+        const pct = (coveredStatements / totalStatements) * 100
+        statements = Math.round(pct * 100) / 100
+        totals = { statements: { pct: statements } }
+      }
+    }
+  } catch (e) {
+    // ignore and fall through
+  }
+}
 if (typeof statements !== 'number') {
   console.error('Could not read statements coverage percentage from coverage summary')
   process.exit(4)
