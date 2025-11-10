@@ -25,30 +25,40 @@ describe('System flows', () => {
     const TopNavbar = (await import('@/components/TopNavbar')).default
     const Leaderboard = (await import('@/pages/Leaderboard')).default
 
-    render(
-      <MemoryRouter>
-        <TopNavbar />
-        <Leaderboard />
-      </MemoryRouter>
-    )
+    const originalCreateObjectURL = (URL as any).createObjectURL
+    const createSpy = vi.fn(() => 'blob:fake')
+    ;(URL as any).createObjectURL = createSpy
+    const revokeOriginal = URL.revokeObjectURL
+    const revokeSpy = revokeOriginal ? vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {}) : null
 
-  await waitFor(() => expect(screen.getByRole('heading', { name: 'Leaderboard' })).toBeInTheDocument())
+    try {
+      render(
+        <MemoryRouter>
+          <TopNavbar />
+          <Leaderboard />
+        </MemoryRouter>
+      )
 
-  // sometimes accessible name lookup can be flaky in jsdom when other UI wrappers
-  // are present; query by visible text as a more robust fallback
-  await waitFor(() => expect(screen.getByText(/Download CSV/i)).toBeInTheDocument())
-  const downloadTextNode = screen.getByText(/Download CSV/i)
-  const downloadBtn = downloadTextNode.closest('button') || downloadTextNode
-  expect(downloadBtn).toBeInTheDocument()
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Leaderboard' })).toBeInTheDocument())
 
-  fireEvent.click(downloadBtn)
+      const downloadBtn = screen.getByRole('button', { name: /Download CSV/i })
+      fireEvent.click(downloadBtn)
 
-    // createObjectURL is called when download is prepared
-    const url = await import('url') // dummy import just to keep async boundary consistent
-    await waitFor(() => {
-      // No exception means flow completed; anchor clicks are suppressed in setup
+      await waitFor(() => expect(createSpy).toHaveBeenCalled())
       expect(downloadBtn).toBeEnabled()
-    })
+    } finally {
+      if (originalCreateObjectURL) {
+        ;(URL as any).createObjectURL = originalCreateObjectURL
+      } else {
+        delete (URL as any).createObjectURL
+      }
+      if (revokeSpy) {
+        revokeSpy.mockRestore()
+      } else if (!revokeOriginal) {
+        // restore by deleting if we created a stub earlier
+        delete (URL as any).revokeObjectURL
+      }
+    }
   })
 
   it('user copies custom prompt on dashboard', async () => {
@@ -68,8 +78,13 @@ describe('System flows', () => {
     const Dashboard = (await import('@/pages/Dashboard')).default
 
     const writeMock = vi.fn().mockResolvedValue(undefined)
-    // @ts-ignore
-    global.navigator = Object.assign(global.navigator || {}, { clipboard: { writeText: writeMock } })
+    const originalClipboard = typeof navigator !== 'undefined' ? (navigator as any).clipboard : undefined
+    if (typeof navigator !== 'undefined') {
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: writeMock },
+      })
+    }
 
     render(
       <MemoryRouter>
@@ -82,13 +97,20 @@ describe('System flows', () => {
     const trigger = screen.getByRole('button', { name: /Get Custom Prompt/i })
     fireEvent.click(trigger)
 
-    // find inner copy button as dashboard test did
-    const header = screen.getByText('Custom Chatbot Prompt')
-    const headerParent = header.closest('div')
-    const innerCopyBtn = headerParent?.querySelector('button') as HTMLButtonElement
-    expect(innerCopyBtn).toBeTruthy()
-    fireEvent.click(innerCopyBtn)
+    const copyButton = screen.getByRole('button', { name: /Copy prompt/i })
+    fireEvent.click(copyButton)
 
     await waitFor(() => expect(writeMock).toHaveBeenCalled())
+
+    if (typeof navigator !== 'undefined') {
+      if (originalClipboard !== undefined) {
+        Object.defineProperty(navigator, 'clipboard', {
+          configurable: true,
+          value: originalClipboard,
+        })
+      } else {
+        delete (navigator as any).clipboard
+      }
+    }
   })
 })

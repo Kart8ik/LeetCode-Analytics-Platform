@@ -48,11 +48,8 @@ describe('Dashboard edge cases', () => {
     const trigger = screen.getByRole('button', { name: /Get Custom Prompt/i })
     fireEvent.click(trigger)
 
-    const header = screen.getByText('Custom Chatbot Prompt')
-    const headerParent = header.closest('div')
-    const innerCopyBtn = headerParent?.querySelector('button') as HTMLButtonElement
-    expect(innerCopyBtn).toBeTruthy()
-    fireEvent.click(innerCopyBtn)
+    const copyButton = screen.getByRole('button', { name: /Copy prompt/i })
+    fireEvent.click(copyButton)
 
     const sonner = await import('sonner')
     await waitFor(() => expect(sonner.toast.error).toHaveBeenCalledWith('Failed to copy prompt'))

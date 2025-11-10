@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -24,6 +24,15 @@ describe('Integration: Dashboard copy success', () => {
     }
     ;(lib.supabase.rpc as any).mockResolvedValue({ data: userDetails, error: null })
 
+    const writeMock = vi.fn().mockResolvedValue(undefined)
+    const originalClipboard = typeof navigator !== 'undefined' ? (navigator as any).clipboard : undefined
+    if (typeof navigator !== 'undefined') {
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: writeMock },
+      })
+    }
+
     render(
       <MemoryRouter>
         <Dashboard />
@@ -32,7 +41,24 @@ describe('Integration: Dashboard copy success', () => {
 
     // Wait for dashboard content and for the formatted prompt area to be rendered
     await screen.findByText(/Total Solved/i)
-    const promptEl = await waitFor(() => document.querySelector('.font-mono'), { timeout: 5000 })
-    expect(promptEl).toBeTruthy()
+
+    const trigger = screen.getByRole('button', { name: /Get Custom Prompt/i })
+    fireEvent.click(trigger)
+
+    const copyButton = screen.getByRole('button', { name: /Copy prompt/i })
+    fireEvent.click(copyButton)
+
+    await waitFor(() => expect(writeMock).toHaveBeenCalledWith(expect.stringContaining('I am a LeetCode user')))
+
+    if (typeof navigator !== 'undefined') {
+      if (originalClipboard !== undefined) {
+        Object.defineProperty(navigator, 'clipboard', {
+          configurable: true,
+          value: originalClipboard,
+        })
+      } else {
+        delete (navigator as any).clipboard
+      }
+    }
   }, 30000)
 })

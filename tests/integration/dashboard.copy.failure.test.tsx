@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -9,6 +9,13 @@ vi.mock('@/context/AuthContext', () => ({
   useAuth: () => ({ user: { id: 'u-copy-fail' }, role: 'user' }),
 }))
 
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}))
+
 import Dashboard from '@/pages/Dashboard'
 
 describe('Integration: Dashboard copy failure', () => {
@@ -16,8 +23,11 @@ describe('Integration: Dashboard copy failure', () => {
 
   it('shows toast/error when clipboard is not available', async () => {
     // Ensure clipboard is undefined for this test
-    // @ts-ignore
-    delete (globalThis as any).navigator?.clipboard
+    const originalClipboard = typeof navigator !== 'undefined' ? (navigator as any).clipboard : undefined
+    if (typeof navigator !== 'undefined') {
+      // @ts-ignore
+      delete navigator.clipboard
+    }
 
     const lib = await import('@/lib/supabase')
     const userDetails = {
@@ -37,11 +47,24 @@ describe('Integration: Dashboard copy failure', () => {
     // Wait for dashboard prompt area to appear (if present)
     await screen.findByText(/Total Solved/i)
 
-    // Now try to locate a prompt text element (font-mono class used by Dashboard for formatted prompt)
-    const promptEl = await waitFor(() => document.querySelector('.font-mono'))
+    const trigger = screen.getByRole('button', { name: /Get Custom Prompt/i })
+    fireEvent.click(trigger)
 
-    // If a prompt area exists, simulate clicking the copy icon by invoking the app-level copy handler.
-    // Without clipboard, the Dashboard should render a toast (sonner) or at least not throw.
-    expect(promptEl === null || promptEl.textContent !== undefined).toBeTruthy()
+    const copyButton = screen.getByRole('button', { name: /Copy prompt/i })
+    fireEvent.click(copyButton)
+
+    const sonner = await import('sonner')
+    await waitFor(() => expect(sonner.toast.error).toHaveBeenCalledWith('Failed to copy prompt'))
+
+    if (typeof navigator !== 'undefined') {
+      if (originalClipboard !== undefined) {
+        Object.defineProperty(navigator, 'clipboard', {
+          configurable: true,
+          value: originalClipboard,
+        })
+      } else {
+        delete (navigator as any).clipboard
+      }
+    }
   }, 30000)
 })

@@ -1,5 +1,6 @@
+// @ts-nocheck
 import React from 'react'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { BrowserRouter } from 'react-router-dom'
 
@@ -34,66 +35,56 @@ describe('Dashboard formatTimeAgo edge cases', () => {
   // Helper: given a submission title, find the time element shown alongside it
   const findTimeForTitle = async (titleText: string) => {
     const p = await screen.findByText(titleText)
-    let ancestor: HTMLElement | null = p.parentElement
-    while (ancestor && ancestor !== document.body) {
-      const timeEl = ancestor.querySelector('[class*="text-xs"]') as HTMLElement | null
-      if (timeEl) {
-        // return the time element even if text is empty; tests will assert
-        // existence and a non-empty textContent if available.
-        return timeEl
-      }
-      ancestor = ancestor.parentElement
+    let container: HTMLElement | null = p.parentElement
+    while (container && container !== document.body) {
+      const candidates = Array.from(container.querySelectorAll<HTMLElement>('div')).filter(
+        (el) =>
+          el !== container &&
+          typeof el.className === 'string' &&
+          el.className.includes('whitespace-nowrap') &&
+          el.textContent?.trim()
+      )
+
+      const timeEl = candidates.find((el) => el.className.includes('text-xs'))
+      if (timeEl) return timeEl
+
+      container = container.parentElement
     }
     return null
   }
 
-  it('shows just now for <60s', async () => {
-    await mountWithTimestamp(10)
+  const expectTimeLabel = async (secondsAgo: number, expected: string) => {
+    await mountWithTimestamp(secondsAgo)
     const timeEl = await findTimeForTitle('X')
     expect(timeEl).toBeTruthy()
-    // timeEl should contain some text (Unknown or a humanized unit)
-    expect((timeEl?.textContent || '').length).toBeGreaterThan(0)
+    expect(timeEl?.textContent?.trim()).toBe(expected)
+  }
+
+  it('shows just now for <60s', async () => {
+    await expectTimeLabel(10, 'Just now')
   })
 
   it('shows minutes for <3600s', async () => {
-    await mountWithTimestamp(120)
-    const timeEl = await findTimeForTitle('X')
-    expect(timeEl).toBeTruthy()
-    expect((timeEl?.textContent || '').length).toBeGreaterThan(0)
+    await expectTimeLabel(120, '2 minutes ago')
   })
 
   it('shows hours for <86400s', async () => {
-    await mountWithTimestamp(7200)
-    const timeEl = await findTimeForTitle('X')
-    expect(timeEl).toBeTruthy()
-    expect((timeEl?.textContent || '').length).toBeGreaterThan(0)
+    await expectTimeLabel(7200, '2 hours ago')
   })
 
   it('shows days for <604800s', async () => {
-    await mountWithTimestamp(2 * 86400)
-    const timeEl = await findTimeForTitle('X')
-    expect(timeEl).toBeTruthy()
-    expect((timeEl?.textContent || '').length).toBeGreaterThan(0)
+    await expectTimeLabel(2 * 86400, '2 days ago')
   })
 
   it('shows weeks for <2592000s', async () => {
-    await mountWithTimestamp(10 * 86400)
-    const timeEl = await findTimeForTitle('X')
-    expect(timeEl).toBeTruthy()
-    expect((timeEl?.textContent || '').length).toBeGreaterThan(0)
+    await expectTimeLabel(14 * 86400, '2 weeks ago')
   })
 
   it('shows months for <31536000s', async () => {
-    await mountWithTimestamp(60 * 86400)
-    const timeEl = await findTimeForTitle('X')
-    expect(timeEl).toBeTruthy()
-    expect((timeEl?.textContent || '').length).toBeGreaterThan(0)
+    await expectTimeLabel(60 * 86400, '2 months ago')
   })
 
   it('shows years for >=31536000s', async () => {
-    await mountWithTimestamp(2 * 31536000)
-    const timeEl = await findTimeForTitle('X')
-    expect(timeEl).toBeTruthy()
-    expect((timeEl?.textContent || '').length).toBeGreaterThan(0)
+    await expectTimeLabel(2 * 31536000, '2 years ago')
   })
 })

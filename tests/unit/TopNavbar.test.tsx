@@ -30,9 +30,11 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+const useAuthMock = vi.fn()
+
 // Mock AuthContext to avoid RPC calls
 vi.mock('@/context/AuthContext', () => ({
-  useAuth: () => ({ user: null, loading: false, role: 'user' }),
+  useAuth: () => useAuthMock(),
 }))
 
 // Mock toast so we can assert on it
@@ -46,6 +48,8 @@ vi.mock('sonner', () => ({
 describe('TopNavbar', () => {
   beforeEach(() => {
     mockNavigate.mockClear()
+    useAuthMock.mockReset()
+    useAuthMock.mockReturnValue({ user: null, loading: false, role: 'user' })
     // @ts-ignore
     window.matchMedia = vi.fn().mockImplementation((query) => ({
       matches: false,

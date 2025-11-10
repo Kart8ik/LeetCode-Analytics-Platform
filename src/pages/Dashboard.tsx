@@ -319,6 +319,7 @@ Based on this profile, please provide personalized coding practice recommendatio
                       onClick={handleCopyPrompt}
                       className="h-8 w-8 p-0"
                       disabled={!formattedPrompt}
+                      aria-label="Copy prompt"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>

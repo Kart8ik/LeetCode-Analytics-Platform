@@ -23,6 +23,11 @@ describe('System: admin download + dashboard copy flow', () => {
     ;(lib.supabase.rpc as any).mockResolvedValue({ data: [{ id: 'r1', name: 'x' }], error: null })
 
     const writeSpy = vi.spyOn(navigator.clipboard as any, 'writeText')
+    const originalCreateObjectURL = (URL as any).createObjectURL
+    const createSpy = vi.fn(() => 'blob:fake')
+    ;(URL as any).createObjectURL = createSpy
+    const revokeOriginal = URL.revokeObjectURL
+    const revokeSpy = revokeOriginal ? vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {}) : null
 
     // Render navbar + leaderboard
     const { rerender } = render(
@@ -40,8 +45,9 @@ describe('System: admin download + dashboard copy flow', () => {
     if (clearBtn) fireEvent.click(clearBtn)
 
     // Simulate clicking download CSV button (may rely on anchor creation)
-    const dlBtn = screen.queryByText(/Download CSV/i)
-    if (dlBtn) fireEvent.click(dlBtn)
+    const dlBtn = screen.queryByRole('button', { name: /Download CSV/i })
+    fireEvent.click(dlBtn)
+    await waitFor(() => expect(createSpy).toHaveBeenCalled())
 
     // Now render Dashboard as a user would and assert clipboard copy works
     // Switch auth mock to normal user for Dashboard render
@@ -57,16 +63,24 @@ describe('System: admin download + dashboard copy flow', () => {
 
     await screen.findByText(/Total Solved/i)
 
-    // If Dashboard didn't auto-trigger a copy, simulate the user copy action by reading the
-    // formatted prompt text and calling navigator.clipboard.writeText ourselves, then assert
-    // that the clipboard API was invoked. This avoids flakiness from UI hover interactions.
-    const promptEl = document.querySelector('.font-mono')
-    if (promptEl && promptEl.textContent) {
-      navigator.clipboard.writeText(promptEl.textContent)
-      await waitFor(() => expect(writeSpy).toHaveBeenCalled(), { timeout: 5000 })
+    const trigger = screen.getByRole('button', { name: /Get Custom Prompt/i })
+    fireEvent.click(trigger)
+
+    const copyButton = screen.getByRole('button', { name: /Copy prompt/i })
+    fireEvent.click(copyButton)
+
+    await waitFor(() => expect(writeSpy).toHaveBeenCalled(), { timeout: 5000 })
+
+    if (originalCreateObjectURL) {
+      ;(URL as any).createObjectURL = originalCreateObjectURL
     } else {
-      // If no prompt found, at least ensure the dashboard rendered; consider this a soft pass
-      expect(promptEl).toBeTruthy()
+      delete (URL as any).createObjectURL
+    }
+
+    if (revokeSpy) {
+      revokeSpy.mockRestore()
+    } else if (!revokeOriginal) {
+      delete (URL as any).revokeObjectURL
     }
   }, 20000)
 })

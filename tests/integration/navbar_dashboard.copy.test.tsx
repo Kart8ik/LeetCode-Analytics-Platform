@@ -27,8 +27,13 @@ describe('Integration: Navbar + Dashboard copy flow', () => {
     ;(lib.supabase.rpc as any).mockResolvedValue({ data: userDetails, error: null })
 
     const writeMock = vi.fn().mockResolvedValue(undefined)
-  // @ts-ignore
-  global.navigator = Object.assign(global.navigator || {}, { clipboard: { writeText: writeMock } })
+    const originalClipboard = typeof navigator !== 'undefined' ? (navigator as any).clipboard : undefined
+    if (typeof navigator !== 'undefined') {
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: writeMock },
+      })
+    }
 
     render(
       <MemoryRouter>
@@ -41,19 +46,29 @@ describe('Integration: Navbar + Dashboard copy flow', () => {
 
   // Scope to the specific Dashboard card that hosts the prompt so TopNavbar
   // doesn't interfere. The mocked Card component exposes data-testid="mock-card".
-  const trigger = screen.getByRole('button', { name: /Get Custom Prompt/i })
-  fireEvent.click(trigger)
+    const trigger = screen.getByRole('button', { name: /Get Custom Prompt/i })
+    fireEvent.click(trigger)
     const card = trigger.closest('[data-testid="mock-card"]') || document.body
 
-    // Wait for the formatted prompt area to render inside that card
     await waitFor(() => {
       const p = card.querySelector('.font-mono') || card.querySelector('[class*="font-mono"]')
       if (!p) throw new Error('formatted prompt not yet rendered')
     })
 
-    const promptDiv = card.querySelector('.font-mono') || card.querySelector('[class*="font-mono"]')
-    // @ts-ignore
-    await (global.navigator.clipboard.writeText as any)(promptDiv?.textContent || '')
-    await waitFor(() => expect(writeMock).toHaveBeenCalled())
+    const copyButton = within(card).getByRole('button', { name: /Copy prompt/i })
+    fireEvent.click(copyButton)
+
+    await waitFor(() => expect(writeMock).toHaveBeenCalledWith(expect.stringContaining('I am a LeetCode user')))
+
+    if (typeof navigator !== 'undefined') {
+      if (originalClipboard !== undefined) {
+        Object.defineProperty(navigator, 'clipboard', {
+          configurable: true,
+          value: originalClipboard,
+        })
+      } else {
+        delete (navigator as any).clipboard
+      }
+    }
   })
 })

@@ -6,8 +6,9 @@ import { MemoryRouter } from 'react-router-dom'
 import '../setup'
 
 // Mock useAuth to return different roles per test
+const useAuthMock = vi.fn()
 vi.mock('@/context/AuthContext', () => ({
-  useAuth: () => ({ user: { id: 'u1' }, role: 'user' }),
+  useAuth: () => useAuthMock(),
 }))
 
 import TopNavbar from '@/components/TopNavbar'
@@ -17,6 +18,8 @@ import { toast } from 'sonner'
 describe('TopNavbar additional tests', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    useAuthMock.mockReset()
+    useAuthMock.mockReturnValue({ user: { id: 'u1' }, role: 'user' })
     // ensure localStorage is available and clear
     try { localStorage.clear() } catch {}
     document.documentElement.classList.remove('dark')
@@ -43,13 +46,7 @@ describe('TopNavbar additional tests', () => {
   })
 
   it('renders admin heading when role is admin', async () => {
-    // remock useAuth to return admin for this test
-    vi.mocked(await import('@/context/AuthContext'), true)
-    vi.mock('@/context/AuthContext', () => ({
-      useAuth: () => ({ user: { id: 'admin1' }, role: 'admin' }),
-    }))
-
-    // re-import component to pick up new mock
+    useAuthMock.mockReturnValue({ user: { id: 'admin1' }, role: 'admin' })
     const { default: AdminTopNav } = await import('@/components/TopNavbar')
 
     render(

@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { BrowserRouter } from 'react-router-dom'
 
@@ -48,8 +48,13 @@ describe('Dashboard page', () => {
 
     // Mock clipboard
     const writeMock = vi.fn().mockResolvedValue(undefined)
-    // @ts-ignore - add to global
-    global.navigator = Object.assign(global.navigator || {}, { clipboard: { writeText: writeMock } })
+    const originalClipboard = typeof navigator !== 'undefined' ? (navigator as any).clipboard : undefined
+    if (typeof navigator !== 'undefined') {
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: writeMock },
+      })
+    }
 
     render(
       <BrowserRouter>
@@ -67,16 +72,27 @@ describe('Dashboard page', () => {
   const trigger = screen.getByRole('button', { name: /Get Custom Prompt/i })
   fireEvent.click(trigger)
 
-  const card = trigger.closest('[data-testid="mock-card"]') || document.body
-  await waitFor(() => {
-    const p = card.querySelector('.font-mono') || card.querySelector('[class*="font-mono"]')
-    if (!p) throw new Error('formatted prompt not yet rendered')
-  })
+    const card = trigger.closest('[data-testid="mock-card"]') || document.body
+    await waitFor(() => {
+      const p = card.querySelector('.font-mono') || card.querySelector('[class*="font-mono"]')
+      if (!p) throw new Error('formatted prompt not yet rendered')
+    })
 
-  const promptDiv = card.querySelector('.font-mono') || card.querySelector('[class*="font-mono"]')
-  // @ts-ignore
-  await (global.navigator.clipboard.writeText as any)(promptDiv?.textContent || '')
-  await waitFor(() => expect(writeMock).toHaveBeenCalled())
+    const copyButton = within(card).getByRole('button', { name: /copy prompt/i })
+    fireEvent.click(copyButton)
+
+    await waitFor(() => expect(writeMock).toHaveBeenCalledWith(expect.stringContaining('I am a LeetCode user')))
+
+    if (typeof navigator !== 'undefined') {
+      if (originalClipboard !== undefined) {
+        Object.defineProperty(navigator, 'clipboard', {
+          configurable: true,
+          value: originalClipboard,
+        })
+      } else {
+        delete (navigator as any).clipboard
+      }
+    }
   })
 
   it('shows toast error when rpc returns error', async () => {
