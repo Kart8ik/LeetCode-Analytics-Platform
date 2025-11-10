@@ -12,6 +12,11 @@
     "test:unit": "vitest --run tests/unit --coverage",
     "test:integration": "vitest --run tests/integration --coverage",
     "test:system": "vitest --run tests/system --coverage"
+    ,
+    "test:coverage": "vitest run --coverage",
+    "check-coverage": "node ./scripts/check-coverage.cjs 80",
+    "lint:ci": "eslint src --ext .ts,.tsx -f json -o lint-report.json",
+    "audit:ci": "npm audit --json > security-report.json || true"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

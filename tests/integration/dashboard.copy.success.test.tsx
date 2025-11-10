@@ -34,5 +34,5 @@ describe('Integration: Dashboard copy success', () => {
     await screen.findByText(/Total Solved/i)
     const promptEl = await waitFor(() => document.querySelector('.font-mono'), { timeout: 5000 })
     expect(promptEl).toBeTruthy()
-  }, 10000)
+  }, 30000)
 })

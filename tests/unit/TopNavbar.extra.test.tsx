@@ -64,10 +64,12 @@ describe('TopNavbar additional tests', () => {
 
   it('handles logout fallback when supabase returns error', async () => {
     // make signOut return an error first, then succeed on fallback
-    const signOutMock = vi.fn()
-    ;(supabase.auth.signOut as any) = vi.fn().mockResolvedValueOnce({ error: { message: 'fail' } })
-    // fallback call stub
-    ;(supabase.auth.signOut as any).mockResolvedValueOnce({ error: null })
+  const signOutMock = vi.fn()
+  // Ensure supabase.auth exists on the mocked client from tests/setup.ts
+  if (!(supabase as any).auth) (supabase as any).auth = {}
+  ;(supabase as any).auth.signOut = vi.fn().mockResolvedValueOnce({ error: { message: 'fail' } })
+  // fallback call stub
+  ;(supabase as any).auth.signOut.mockResolvedValueOnce({ error: null })
 
     const toastSuccess = vi.spyOn(toast, 'success')
     const toastError = vi.spyOn(toast, 'error')

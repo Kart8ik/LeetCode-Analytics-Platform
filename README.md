@@ -109,6 +109,30 @@ npm test
 npm run test:coverage
 ```
 
+## CI/CD Pipeline
+
+This repository includes a GitHub Actions pipeline (`.github/workflows/ci.yml`) that enforces build, test, coverage, lint and security checks. The pipeline uploads artifacts for inspection (coverage HTML, lint report, security report) and packages a deployment artifact when all gates pass.
+
+Quick commands used by the pipeline:
+
+```bash
+# Run tests with coverage (locally)
+npm run test:coverage
+
+# Check coverage threshold (default 80%)
+node ./scripts/check-coverage.cjs 80
+
+# Produce lint report
+npm run lint:ci
+
+# Produce security report
+npm run audit:ci
+```
+
+CI badge (workflow):
+
+![CI](https://github.com/pestechnology/PESU_EC_CSE_A_P73_API_Rate_Limiter_Agile-PipeDream/actions/workflows/ci.yml/badge.svg)
+
 ## 📄 License
 
 This project is developed for educational purposes as part of the PES University UE23CS341A curriculum.

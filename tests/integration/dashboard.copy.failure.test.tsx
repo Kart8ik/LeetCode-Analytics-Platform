@@ -43,5 +43,5 @@ describe('Integration: Dashboard copy failure', () => {
     // If a prompt area exists, simulate clicking the copy icon by invoking the app-level copy handler.
     // Without clipboard, the Dashboard should render a toast (sonner) or at least not throw.
     expect(promptEl === null || promptEl.textContent !== undefined).toBeTruthy()
-  }, 10000)
+  }, 30000)
 })

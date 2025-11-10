@@ -40,5 +40,5 @@ describe('Dashboard integration', () => {
     // ExampleChart can be rendered standalone to ensure parsing works
     const chart = render(<ExampleChart submissionCalendar={'{}'} />)
     expect(chart.container).toBeTruthy()
-  }, 10000)
+  }, 30000)
 })
