@@ -68,6 +68,13 @@ jobs:
           name: coverage
           path: coverage
 
+      - name: List coverage files for debugging
+        run: |
+          echo "Coverage folder contents:" || true
+          ls -la coverage || true
+          echo "Recursive tree:" || true
+          ls -R coverage || true
+
       - name: Check coverage threshold
         run: node ./scripts/check-coverage.cjs 80
 
