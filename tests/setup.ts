@@ -101,20 +101,26 @@ vi.mock("@/lib/supabase", () => ({
 // These warnings are benign in our tests where we wait for DOM updates via testing-library.
 ;(function filterActWarnings() {
   const origError = console.error.bind(console)
-  // Pattern used in the React warning text emitted by jsdom/react when an update
-  // is not wrapped in act(...). We only filter Tooltip-specific ones and the generic
-  // act(...) guidance messages to keep other errors visible.
-  const skipPatterns = [
-    /An update to .*Tooltip inside a test was not wrapped in act\(/,
-    /When testing, code that causes React state updates should be wrapped into act\(/,
+  // Narrow filtering for known benign Tooltip/act warnings.
+  // Instead of broad regexes, only ignore messages that both mention Tooltip
+  // and the 'not wrapped in act(' guidance. This reduces the chance of
+  // accidentally hiding other important React errors.
+  const skipChecks: Array<(msg: string) => boolean> = [
+    // Typical message: "An update to <Tooltip ...> inside a test was not wrapped in act(...)"
+    (m: string) => m.includes('Tooltip') && m.includes('not wrapped in act('),
+    // Defensive: the general guidance string sometimes appears; keep it very specific
+    (m: string) => m.includes('When testing, code that causes React state updates should be wrapped into act('),
   ]
 
-  // @ts-expect-error
   console.error = (...args: any[]) => {
     try {
       const msg = typeof args[0] === 'string' ? args[0] : ''
-      for (const p of skipPatterns) {
-        if (p.test(msg)) return
+      for (const check of skipChecks) {
+        try {
+          if (check(msg)) return
+        } catch (e) {
+          // if a check throws, ignore it and continue to the next
+        }
       }
     } catch (e) {
       // on any failure, fallback to original

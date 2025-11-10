@@ -26,6 +26,9 @@ describe('Leaderboard page', () => {
   })
 
   it('renders leaderboard rows when RPC returns data', async () => {
+    // Note: test fixtures may sometimes use `id` instead of `user_id`.
+    // The Leaderboard component intentionally falls back to `id`/username/index
+    // for the row key to avoid React missing-key warnings in tests.
     const data = [
       {
         user_id: 'u1',
