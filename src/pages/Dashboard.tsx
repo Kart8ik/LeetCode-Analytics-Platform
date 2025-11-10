@@ -148,8 +148,8 @@ Based on this profile, please provide personalized coding practice recommendatio
       const parsed = JSON.parse(jsonStr)
       return Array.isArray(parsed) ? parsed : []
     } catch (err) {
-      // log parsing problems but don't fail the component
-      console.error('Error parsing recent submissions:', err)
+          // debug-level log parsing problems; tests intentionally exercise malformed JSON
+          console.debug('Error parsing recent submissions:', (err as any)?.message ?? String(err))
       return []
     }
   }, [userDetails])
@@ -166,7 +166,7 @@ Based on this profile, please provide personalized coding practice recommendatio
       // Sort by problems_solved descending
       return [...stats].sort((a, b) => (b.problems_solved || 0) - (a.problems_solved || 0))
     } catch (error) {
-      console.error('Error parsing topic stats:', error)
+          console.debug('Error parsing topic stats:', (error as any)?.message ?? String(error))
       return []
     }
   }, [userDetails])
@@ -183,7 +183,7 @@ Based on this profile, please provide personalized coding practice recommendatio
       // Sort by problems_solved descending
       return [...stats].sort((a, b) => (b.problems_solved || 0) - (a.problems_solved || 0))
     } catch (error) {
-      console.error('Error parsing language stats:', error)
+          console.debug('Error parsing language stats:', (error as any)?.message ?? String(error))
       return []
     }
   }, [userDetails])
@@ -251,8 +251,8 @@ Based on this profile, please provide personalized coding practice recommendatio
       if (error){
         toast.error(error.message)
       } else {
-        toast.success("User details fetched successfully")
-        console.log("user details", data)
+  toast.success("User details fetched successfully")
+  console.debug("user details", data)
         setUserDetails(data)
       }
     }
