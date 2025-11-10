@@ -60,3 +60,46 @@ vi.mock("@/lib/supabase", () => ({
     // ignore - best-effort suppression
   }
 })()
+
+// Provide a default clipboard mock so tests that rely on navigator.clipboard
+// don't fail if they forget to set a per-test mock. Tests that need to assert
+// writeText can override this with their own spy.
+;(function ensureClipboard() {
+  try {
+    // @ts-ignore
+    if (!global.navigator) (global.navigator as any) = {}
+    // @ts-ignore
+    if (!global.navigator.clipboard) {
+      // @ts-ignore
+      global.navigator.clipboard = { writeText: vi.fn().mockResolvedValue(undefined) }
+    }
+  } catch (e) {
+    // ignore
+  }
+})()
+
+// Filter noisy React 'act(...)' warnings coming from Tooltip updates in some tests.
+// These warnings are benign in our tests where we wait for DOM updates via testing-library.
+;(function filterActWarnings() {
+  const origError = console.error.bind(console)
+  // Pattern used in the React warning text emitted by jsdom/react when an update
+  // is not wrapped in act(...). We only filter Tooltip-specific ones and the generic
+  // act(...) guidance messages to keep other errors visible.
+  const skipPatterns = [
+    /An update to .*Tooltip inside a test was not wrapped in act\(/,
+    /When testing, code that causes React state updates should be wrapped into act\(/,
+  ]
+
+  // @ts-ignore
+  console.error = (...args: any[]) => {
+    try {
+      const msg = typeof args[0] === 'string' ? args[0] : ''
+      for (const p of skipPatterns) {
+        if (p.test(msg)) return
+      }
+    } catch (e) {
+      // on any failure, fallback to original
+    }
+    origError(...args)
+  }
+})()

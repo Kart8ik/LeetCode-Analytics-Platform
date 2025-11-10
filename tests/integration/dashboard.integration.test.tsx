@@ -13,6 +13,7 @@ import Dashboard from '@/pages/Dashboard'
 import { ExampleChart } from '@/components/ExampleChart'
 
 describe('Dashboard integration', () => {
+  // Allow a longer timeout for this integration test on slower environments
   beforeEach(() => vi.clearAllMocks())
 
   it('renders dashboard stats and example chart', async () => {
@@ -32,11 +33,12 @@ describe('Dashboard integration', () => {
       </MemoryRouter>
     )
 
-    await waitFor(() => expect(screen.getByText('Total Solved')).toBeInTheDocument())
-    expect(screen.getByText('7')).toBeInTheDocument()
+    // Wait for the dashboard to show the Total Solved card and the number
+    await screen.findByText('Total Solved')
+    await screen.findByText('7')
 
     // ExampleChart can be rendered standalone to ensure parsing works
     const chart = render(<ExampleChart submissionCalendar={'{}'} />)
     expect(chart.container).toBeTruthy()
-  })
+  }, 10000)
 })

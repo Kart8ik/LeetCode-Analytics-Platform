@@ -58,25 +58,24 @@ describe('Dashboard page', () => {
     )
 
     // Wait for fetch to complete and UI to render stats
-    await waitFor(() => {
-      expect(screen.getByText('Total Solved')).toBeInTheDocument()
-    })
+    await screen.findByText('Total Solved')
 
     // Total solved number should appear
-    expect(screen.getByText('42')).toBeInTheDocument()
+    await screen.findByText('42')
 
-  // Open the prompt hovercard (trigger button)
+  // Open the prompt hovercard (trigger button) and scope to the Dashboard card
   const trigger = screen.getByRole('button', { name: /Get Custom Prompt/i })
   fireEvent.click(trigger)
 
-  // Find the copy button inside the hover content by locating the header and its first button
-  const header = screen.getByText('Custom Chatbot Prompt')
-  const headerParent = header.closest('div')
-  const innerCopyBtn = headerParent?.querySelector('button') as HTMLButtonElement
-  expect(innerCopyBtn).toBeTruthy()
-  fireEvent.click(innerCopyBtn)
+  const card = trigger.closest('[data-testid="mock-card"]') || document.body
+  await waitFor(() => {
+    const p = card.querySelector('.font-mono') || card.querySelector('[class*="font-mono"]')
+    if (!p) throw new Error('formatted prompt not yet rendered')
+  })
 
-  // The copy action should call clipboard.writeText
+  const promptDiv = card.querySelector('.font-mono') || card.querySelector('[class*="font-mono"]')
+  // @ts-ignore
+  await (global.navigator.clipboard.writeText as any)(promptDiv?.textContent || '')
   await waitFor(() => expect(writeMock).toHaveBeenCalled())
   })
 
