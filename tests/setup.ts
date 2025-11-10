@@ -44,7 +44,7 @@ vi.mock("@/lib/supabase", () => ({
 // so tests that simulate clicks (download link.click()) don't trigger navigation.
 ;(function disableAnchorNavigation() {
   try {
-    // @ts-ignore
+    // @ts-expect-error
     const proto = HTMLAnchorElement && HTMLAnchorElement.prototype
     if (proto && typeof proto.click === 'function') {
       // keep original if needed later
@@ -85,11 +85,11 @@ vi.mock("@/lib/supabase", () => ({
 // writeText can override this with their own spy.
 ;(function ensureClipboard() {
   try {
-    // @ts-ignore
+    // @ts-expect-error
     if (!global.navigator) (global.navigator as any) = {}
-    // @ts-ignore
+    // @ts-expect-error
     if (!global.navigator.clipboard) {
-      // @ts-ignore
+      // @ts-expect-error
       global.navigator.clipboard = { writeText: vi.fn().mockResolvedValue(undefined) }
     }
   } catch (e) {
@@ -109,7 +109,7 @@ vi.mock("@/lib/supabase", () => ({
     /When testing, code that causes React state updates should be wrapped into act\(/,
   ]
 
-  // @ts-ignore
+  // @ts-expect-error
   console.error = (...args: any[]) => {
     try {
       const msg = typeof args[0] === 'string' ? args[0] : ''
