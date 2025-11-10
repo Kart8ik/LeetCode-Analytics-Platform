@@ -326,7 +326,7 @@ export default function Leaderboard() {
                             : ''
 
                       // Ensure a stable key even if test fixtures use `id` instead of `user_id`
-                      const rowKey = user.user_id ?? (user as any).id ?? user.username ?? `row-${_idx}`
+                      const rowKey = user.user_id ?? (user as { id?: string }).id ?? user.username ?? `row-${_idx}`
 
                       return (
                         <tr

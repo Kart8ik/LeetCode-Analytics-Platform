@@ -148,8 +148,9 @@ Based on this profile, please provide personalized coding practice recommendatio
       const parsed = JSON.parse(jsonStr)
       return Array.isArray(parsed) ? parsed : []
     } catch (err) {
-          // debug-level log parsing problems; tests intentionally exercise malformed JSON
-          console.debug('Error parsing recent submissions:', (err as any)?.message ?? String(err))
+      // debug-level log parsing problems; tests intentionally exercise malformed JSON
+      const msg = err instanceof Error ? err.message : String(err)
+      console.debug('Error parsing recent submissions:', msg)
       return []
     }
   }, [userDetails])
@@ -166,7 +167,8 @@ Based on this profile, please provide personalized coding practice recommendatio
       // Sort by problems_solved descending
       return [...stats].sort((a, b) => (b.problems_solved || 0) - (a.problems_solved || 0))
     } catch (error) {
-          console.debug('Error parsing topic stats:', (error as any)?.message ?? String(error))
+      const msg = error instanceof Error ? error.message : String(error)
+      console.debug('Error parsing topic stats:', msg)
       return []
     }
   }, [userDetails])
@@ -183,7 +185,8 @@ Based on this profile, please provide personalized coding practice recommendatio
       // Sort by problems_solved descending
       return [...stats].sort((a, b) => (b.problems_solved || 0) - (a.problems_solved || 0))
     } catch (error) {
-          console.debug('Error parsing language stats:', (error as any)?.message ?? String(error))
+      const msg = error instanceof Error ? error.message : String(error)
+      console.debug('Error parsing language stats:', msg)
       return []
     }
   }, [userDetails])
