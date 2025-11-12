@@ -5,13 +5,14 @@ import { Link, useNavigate } from "react-router-dom";
 import LoginNavbar from "@/components/LoginNavbar";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+  const { isDark } = useAuth()
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -52,13 +53,20 @@ export default function Login() {
       <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Left side - Empty space (60%) */}
         <div className="hidden md:flex md:w-[60%] bg-background border-r border-border overflow-hidden h-full">
-          <img 
-            src="/WhatsApp Image 2025-11-10 at 01.41.00_f5643217.jpg" 
+          {isDark ? (
+            <img 
+            src="Dark_Mode_Image.png" 
             alt="Background" 
             className="w-full h-full object-cover"
           />
+          ) : (
+            <img 
+            src="Light_Mode_Image.png" 
+            alt="Background" 
+            className="w-full h-full object-cover"
+          />
+          )} 
         </div>
-
         {/* Right side - Login form (40%) */}
         <div className="flex-1 md:w-[40%] flex items-center justify-center p-8 bg-background overflow-y-auto">
           <div className="w-full max-w-md space-y-6">

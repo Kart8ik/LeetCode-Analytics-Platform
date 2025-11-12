@@ -4,8 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import LoginNavbar from "@/components/LoginNavbar";
+import {useAuth} from "@/context/AuthContext"
 
 export default function SignUp() {
+  const {isDark} = useAuth()
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -80,15 +82,28 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       <LoginNavbar />
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Left side - Empty space (60%) */}
-        <div className="hidden md:flex md:w-[60%] bg-background border-r border-border"></div>
-
+        <div className="hidden md:flex md:w-[60%] bg-background border-r border-border overflow-hidden h-full">
+          {isDark ? (
+            <img 
+            src="Dark_Mode_Image.png" 
+            alt="Background" 
+            className="w-full h-full object-cover"
+          />
+          ) : (
+            <img 
+            src="Light_Mode_Image.png" 
+            alt="Background" 
+            className="w-full h-full object-cover"
+          />
+          )} 
+        </div>
         {/* Right side - Signup form (40%) */}
-        <div className="flex-1 md:w-[40%] flex items-center justify-center p-8 bg-background overflow-y-auto">
+        <div className="flex-1 md:w-[40%] flex items-center justify-center p-8 bg-background overflow-hidden">
           <div className="w-full max-w-md space-y-6 py-8">
 
           <div className="space-y-2">
