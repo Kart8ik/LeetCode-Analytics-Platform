@@ -9,6 +9,8 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     role: string | null;
+    isDark: boolean;
+    toggleTheme: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -16,6 +18,8 @@ const AuthContext = createContext<AuthContextType>({
     user: null,
     loading: true,
     role: null,
+    isDark: false,
+    toggleTheme: () => {},
 });
 
 const resolveRole = (nextUser: User | null): string | null => {
@@ -43,6 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [role, setRole] = useState<string | null>(null);
+    const [isDark, setIsDark] = useState<boolean>(true);
 
     useEffect(() => {
         const init = async () => {
@@ -79,8 +84,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
     }, []);
 
+    // Initialize theme from localStorage or system preference
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem('theme')
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+            const initial = stored ? stored === 'dark' : prefersDark
+            setIsDark(initial)
+            if (initial) document.documentElement.classList.add('dark')
+            else document.documentElement.classList.remove('dark')
+        } catch {
+            // ignore theme read errors
+        }
+    }, [])
+
+    // Apply theme side-effects whenever theme changes
+    useEffect(() => {
+        try {
+            localStorage.setItem("theme", isDark ? "dark" : "light");
+        } catch {
+            // ignore write errors
+        }
+        if (isDark) {
+            document.documentElement.classList.add("dark");
+        } else {
+            document.documentElement.classList.remove("dark");
+        }
+    }, [isDark]);
+
+    const toggleTheme = () => setIsDark((prev) => !prev);
+
     return (
-        <AuthContext.Provider value={{ session, user, loading, role }}>
+        <AuthContext.Provider value={{ session, user, loading, role, isDark, toggleTheme }}>
             {children}
         </AuthContext.Provider>
     );

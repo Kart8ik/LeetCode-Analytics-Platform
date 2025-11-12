@@ -1,36 +1,11 @@
-import { useEffect, useState } from 'react'
 import { Sun, Moon} from 'lucide-react'
 import LogoLight from '@/assets/images/icons/logo-icon-whitebg1.png'
 import LogoDark from '@/assets/images/icons/logo-icon-blackbg.png'
+import { useAuth } from '@/context/AuthContext'
 
 
 export default function TopNavbar() {
-  const [isDark, setIsDark] = useState<boolean>(false)
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('theme')
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      const initial = stored ? stored === 'dark' : prefersDark
-      setIsDark(initial)
-      if (initial) document.documentElement.classList.add('dark')
-      else document.documentElement.classList.remove('dark')
-    } catch {
-      // ignore storage/read errors
-    }
-  }, [])
-
-  const toggleTheme = () => {
-    const next = !isDark
-    setIsDark(next)
-    try {
-      localStorage.setItem('theme', next ? 'dark' : 'light')
-    } catch {
-      // ignore localStorage write errors (private mode, etc.)
-    }
-    if (next) document.documentElement.classList.add('dark')
-    else document.documentElement.classList.remove('dark')
-  }
+  const { isDark, toggleTheme } = useAuth()
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur border-b border-border shadow-sm">

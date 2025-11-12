@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Sun, Moon, LayoutDashboard, Trophy} from 'lucide-react'
@@ -10,37 +10,10 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 
 export default function TopNavbar() {
-  const [isDark, setIsDark] = useState<boolean>(false)
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const { role } = useAuth()
-
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('theme')
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      const initial = stored ? stored === 'dark' : prefersDark
-      setIsDark(initial)
-      if (initial) document.documentElement.classList.add('dark')
-      else document.documentElement.classList.remove('dark')
-    } catch {
-      // ignore theme read errors
-    }
-  }, [])
- 
-  const toggleTheme = () => {
-    const next = !isDark
-    setIsDark(next)
-    try {
-      localStorage.setItem('theme', next ? 'dark' : 'light')
-    } catch {
-      // ignore localStorage write errors
-    }
-    if (next) document.documentElement.classList.add('dark')
-    else document.documentElement.classList.remove('dark')
-  }
+  const { role, isDark, toggleTheme } = useAuth()
 
   const handleLogout = async () => {
     if (isLoggingOut) return
