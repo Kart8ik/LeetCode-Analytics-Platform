@@ -9,8 +9,6 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     role: string | null;
-    // theme
-    theme: "light" | "dark";
     isDark: boolean;
     toggleTheme: () => void;
 }
@@ -20,7 +18,6 @@ const AuthContext = createContext<AuthContextType>({
     user: null,
     loading: true,
     role: null,
-    theme: "light",
     isDark: false,
     toggleTheme: () => {},
 });
@@ -50,7 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [role, setRole] = useState<string | null>(null);
-    const [theme, setTheme] = useState<"light" | "dark">("light");
+    const [isDark, setIsDark] = useState<boolean>(true);
 
     useEffect(() => {
         const init = async () => {
@@ -90,34 +87,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Initialize theme from localStorage or system preference
     useEffect(() => {
         try {
-            const stored = localStorage.getItem("theme");
-            const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-            const initial: "light" | "dark" = stored === "dark" || (!stored && prefersDark) ? "dark" : "light";
-            setTheme(initial);
+            const stored = localStorage.getItem('theme')
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+            const initial = stored ? stored === 'dark' : prefersDark
+            setIsDark(initial)
+            if (initial) document.documentElement.classList.add('dark')
+            else document.documentElement.classList.remove('dark')
         } catch {
-            // ignore storage/read errors
-            setTheme("light");
+            // ignore theme read errors
         }
-    }, []);
+    }, [])
 
     // Apply theme side-effects whenever theme changes
     useEffect(() => {
         try {
-            localStorage.setItem("theme", theme);
+            localStorage.setItem("theme", isDark ? "dark" : "light");
         } catch {
             // ignore write errors
         }
-        if (theme === "dark") {
+        if (isDark) {
             document.documentElement.classList.add("dark");
         } else {
             document.documentElement.classList.remove("dark");
         }
-    }, [theme]);
+    }, [isDark]);
 
-    const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    const toggleTheme = () => setIsDark((prev) => !prev);
 
     return (
-        <AuthContext.Provider value={{ session, user, loading, role, theme, isDark: theme === "dark", toggleTheme }}>
+        <AuthContext.Provider value={{ session, user, loading, role, isDark, toggleTheme }}>
             {children}
         </AuthContext.Provider>
     );
