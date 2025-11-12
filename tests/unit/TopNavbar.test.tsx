@@ -49,7 +49,22 @@ describe('TopNavbar', () => {
   beforeEach(() => {
     mockNavigate.mockClear()
     useAuthMock.mockReset()
-    useAuthMock.mockReturnValue({ user: null, loading: false, role: 'user' })
+    let currentIsDark = false
+    const toggleTheme = vi.fn(() => {
+      currentIsDark = !currentIsDark
+      if (currentIsDark) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    })
+    useAuthMock.mockImplementation(() => ({
+      user: null,
+      loading: false,
+      role: 'user',
+      isDark: currentIsDark,
+      toggleTheme,
+    }))
     // @ts-ignore
     window.matchMedia = vi.fn().mockImplementation((query) => ({
       matches: false,

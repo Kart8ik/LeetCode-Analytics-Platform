@@ -15,11 +15,33 @@ import TopNavbar from '@/components/TopNavbar'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
+const createDeferred = <T,>() => {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((res) => {
+    resolve = res
+  })
+  return { promise, resolve }
+}
+
 describe('TopNavbar additional tests', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     useAuthMock.mockReset()
-    useAuthMock.mockReturnValue({ user: { id: 'u1' }, role: 'user' })
+    let currentIsDark = false
+    const toggleTheme = vi.fn(() => {
+      currentIsDark = !currentIsDark
+      if (currentIsDark) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    })
+    useAuthMock.mockImplementation(() => ({
+      user: { id: 'u1' },
+      role: 'user',
+      isDark: currentIsDark,
+      toggleTheme,
+    }))
     // ensure localStorage is available and clear
     try { localStorage.clear() } catch {}
     document.documentElement.classList.remove('dark')
@@ -46,7 +68,12 @@ describe('TopNavbar additional tests', () => {
   })
 
   it('renders admin heading when role is admin', async () => {
-    useAuthMock.mockReturnValue({ user: { id: 'admin1' }, role: 'admin' })
+    useAuthMock.mockReturnValue({
+      user: { id: 'admin1' },
+      role: 'admin',
+      isDark: false,
+      toggleTheme: vi.fn(),
+    })
     const { default: AdminTopNav } = await import('@/components/TopNavbar')
 
     render(
@@ -61,15 +88,12 @@ describe('TopNavbar additional tests', () => {
 
   it('handles logout fallback when supabase returns error', async () => {
     // make signOut return an error first, then succeed on fallback
-  const signOutMock = vi.fn()
-  // Ensure supabase.auth exists on the mocked client from tests/setup.ts
-  if (!(supabase as any).auth) (supabase as any).auth = {}
-  ;(supabase as any).auth.signOut = vi.fn().mockResolvedValueOnce({ error: { message: 'fail' } })
-  // fallback call stub
-  ;(supabase as any).auth.signOut.mockResolvedValueOnce({ error: null })
+    if (!(supabase as any).auth) (supabase as any).auth = {}
+    ;(supabase as any).auth.signOut = vi.fn().mockResolvedValueOnce({ error: { message: 'fail' } })
+    // fallback call stub
+    ;(supabase as any).auth.signOut.mockResolvedValueOnce({ error: null })
 
     const toastSuccess = vi.spyOn(toast, 'success')
-    const toastError = vi.spyOn(toast, 'error')
 
     render(
       <MemoryRouter>
@@ -84,5 +108,30 @@ describe('TopNavbar additional tests', () => {
     await new Promise((r) => setTimeout(r, 50))
 
     expect(toastSuccess).toHaveBeenCalled()
+  })
+
+  it('short-circuits logout when a request is already in flight', async () => {
+    const deferred = createDeferred<{ error: null }>()
+    if (!(supabase as any).auth) (supabase as any).auth = {}
+    ;(supabase as any).auth.signOut = vi.fn().mockImplementation(() => deferred.promise)
+
+    render(
+      <MemoryRouter>
+        <TopNavbar />
+      </MemoryRouter>
+    )
+
+    const logoutBtn = screen.getByRole('button', { name: /Logout/i })
+    fireEvent.click(logoutBtn)
+    expect((supabase as any).auth.signOut).toHaveBeenCalledTimes(1)
+    expect(logoutBtn).toHaveTextContent(/Logging out.../i)
+
+    fireEvent.click(logoutBtn)
+    expect((supabase as any).auth.signOut).toHaveBeenCalledTimes(1)
+
+    deferred.resolve({ error: null })
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(logoutBtn).toHaveTextContent(/Logout/i)
   })
 })
