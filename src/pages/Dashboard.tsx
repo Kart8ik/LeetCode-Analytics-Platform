@@ -416,7 +416,7 @@ Based on this profile, please provide personalized coding practice recommendatio
             <CardContent className="flex-1 overflow-y-auto max-h-[400px]">
               {recentSubmissions.length === 0 ? (
                 <div className="flex items-center justify-center py-8 text-muted-foreground">
-                  <p className="text-sm">No recent submissions found</p>
+                  <p className="text-sm">No recent submissions found or they might be private for your profile</p>
                 </div>
               ) : (
                 <div className="space-y-4 pr-2">
@@ -429,7 +429,7 @@ Based on this profile, please provide personalized coding practice recommendatio
                         ✓
                       </div>
                       <div className="flex-1 space-y-1 min-w-0">
-                        <p className="text-sm py-1 font-medium leading-none truncate">
+                        <p className="text-sm py-1 font-medium leading-tight">
                           {submission.title}
                         </p>
                         <a
