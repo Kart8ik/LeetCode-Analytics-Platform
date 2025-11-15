@@ -330,7 +330,7 @@ def fetch_and_push():
 
             # Push to Supabase
             upsert_to_supabase(user_id, row)
-            print(f"✅ Synced {uname} successfully.\n")
+            print(f"Synced {uname} successfully.\n")
 
         except Exception as e:
             print(f"[ERROR] Failed for {uname}: {e}")
