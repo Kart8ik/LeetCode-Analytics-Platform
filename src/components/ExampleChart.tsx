@@ -29,9 +29,9 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
         jsonStr = jsonStr.replace(/\\"/g, '"').replace(/\\\\/g, '\\')
         console.log("jsonStr", jsonStr)
       }
-      
+
       const parsed = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr
-      
+
       // Convert to Map with string keys (timestamps)
       // LeetCode returns timestamps as string keys in JSON
       const dataMap = new Map<string, number>()
@@ -59,21 +59,21 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
     const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
     const oneYearAgo = new Date(todayUTC)
     oneYearAgo.setUTCFullYear(todayUTC.getUTCFullYear() - 1)
-    
+
     // Start from the first day of the week that contains oneYearAgo
     const startDate = new Date(oneYearAgo)
     const dayOfWeek = startDate.getUTCDay()
     startDate.setUTCDate(startDate.getUTCDate() - dayOfWeek) // Start from Sunday
     startDate.setUTCHours(0, 0, 0, 0)
-    
+
     const grid: Array<Array<{ date: Date; count: number; timestamp: string }>> = []
     const currentDate = new Date(startDate)
     const endDate = new Date(todayUTC)
-    
+
     // Create weeks (rows) - each week is a row
     while (currentDate <= endDate) {
       const week: Array<{ date: Date; count: number; timestamp: string }> = []
-      
+
       // Create days in week (columns) - Sunday to Saturday
       for (let day = 0; day < 7; day++) {
         // Create date at UTC midnight for this day
@@ -81,20 +81,20 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
         const month = currentDate.getUTCMonth()
         const dateNum = currentDate.getUTCDate()
         const date = new Date(Date.UTC(year, month, dateNum, 0, 0, 0, 0))
-        
+
         // Generate UTC timestamp in seconds (LeetCode format)
         const timestamp = Math.floor(date.getTime() / 1000).toString()
-        
+
         // Try multiple timestamp formats to match LeetCode data
         let count = calendarData.get(timestamp) || 0
-        
+
         // If not found, try without the string conversion
         if (count === 0 && calendarData.size > 0) {
           // Try looking up with the numeric value as string
           const numTimestamp = parseInt(timestamp, 10)
           count = calendarData.get(String(numTimestamp)) || 0
         }
-        
+
         // Debug: log first few lookups to see what's happening
         if (grid.length === 0 && day < 3 && calendarData.size > 0) {
           console.log(`Date: ${date.toISOString()}, Looking for timestamp: ${timestamp}, found: ${count}`)
@@ -110,25 +110,25 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
             console.log(`Found nearby key: ${nearbyKey}, value: ${calendarData.get(String(nearbyKey))}`)
           }
         }
-        
+
         week.push({ date, count, timestamp })
         currentDate.setUTCDate(currentDate.getUTCDate() + 1)
       }
-      
+
       grid.push(week)
     }
-    
+
     return grid
   }, [calendarData])
 
   // Get color intensity based on submission count using primary color
   const getColorIntensity = (count: number, maxCount: number): string => {
     if (count === 0) return 'bg-[#ebedf0] dark:bg-[#161b22]'
-    
+
     // Use primary color with varying opacity based on intensity
     // Map to 4 intensity levels
     const intensity = maxCount > 0 ? count / maxCount : 0
-    
+
     if (intensity >= 0.75) return 'bg-primary' // Full primary color for highest intensity
     if (intensity >= 0.5) return 'bg-primary/80'   // 80% opacity
     if (intensity >= 0.25) return 'bg-primary/60' // 60% opacity
@@ -146,11 +146,11 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
 
   // Format date for tooltip
   const formatDate = (date: Date): string => {
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     })
   }
 
@@ -160,7 +160,7 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
     const seenMonths = new Set<string>()
     const today = new Date()
     const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
-    
+
     calendarGrid.forEach((week, weekIdx) => {
       // Check the first day of the week (Sunday)
       const firstDay = week[0]
@@ -176,7 +176,7 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
         }
       }
     })
-    
+
     return labels
   }, [calendarGrid])
 
@@ -193,67 +193,67 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
 
   return (
     <div className="flex flex-col gap-2 w-full">
-          {/* Month labels row */}
-          <div className="flex w-full gap-1 pl-4">
-            
-            {/* Month labels aligned with calendar weeks */}
-            <div className="flex flex-row gap-1 flex-1">
-              {monthLabelArray.map((month, weekIdx) => (
-                <div key={weekIdx} className="flex-1 flex items-start">
-                  {month && (
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {month}
-                    </span>
-                  )}
-                </div>
-              ))}
+      {/* Month labels row */}
+      <div className="flex w-full gap-1 pl-4">
+
+        {/* Month labels aligned with calendar weeks */}
+        <div className="flex flex-row gap-1 flex-1">
+          {monthLabelArray.map((month, weekIdx) => (
+            <div key={weekIdx} className="flex-1 flex items-start">
+              {month && (
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  {month}
+                </span>
+              )}
             </div>
-          </div>
+          ))}
+        </div>
+      </div>
 
-          {/* Calendar grid */}
-          <div className="relative flex w-full gap-1 pl-4">
+      {/* Calendar grid */}
+      <div className="relative flex w-full gap-1 pl-4">
 
-            {/* Calendar squares - weeks as columns */}
-            <TooltipProvider>
-              <div 
-                ref={calendarRef}
-                className="flex flex-row gap-1 flex-1"
-              >
-                {calendarGrid.map((week, weekIdx) => (
-                  <div key={weekIdx} className="flex flex-col gap-1 flex-1">
-                    {week.map((day, dayIdx) => {
-                      const today = new Date()
-                      const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
-                      const isFuture = day.date > todayUTC
-                      const colorClass = isFuture 
-                        ? 'bg-[#ebedf0] dark:bg-[#161b22] opacity-30' 
-                        : getColorIntensity(day.count, maxCount)
-                      
-                      return (
-                        <Tooltip key={`${weekIdx}-${dayIdx}`}>
-                          <TooltipTrigger asChild>
-                            <div
-                              className={`w-full aspect-square rounded-sm ${colorClass} cursor-pointer hover:ring-2 hover:ring-ring transition-all`}
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="text-sm">
-                              <div className="font-medium">
-                                {day.count} {day.count === 1 ? 'submission' : 'submissions'}
-                              </div>
-                              <div className="text-xs text-primary-foreground">
-                                {formatDate(day.date)}
-                              </div>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      )
-                    })}
-                  </div>
-                ))}
+        {/* Calendar squares - weeks as columns */}
+        <TooltipProvider>
+          <div
+            ref={calendarRef}
+            className="flex flex-row gap-1 flex-1"
+          >
+            {calendarGrid.map((week, weekIdx) => (
+              <div key={weekIdx} className="flex flex-col gap-1 flex-1">
+                {week.map((day, dayIdx) => {
+                  const today = new Date()
+                  const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
+                  const isFuture = day.date > todayUTC
+                  const colorClass = isFuture
+                    ? 'bg-[#ebedf0] dark:bg-[#161b22] opacity-30'
+                    : getColorIntensity(day.count, maxCount)
+
+                  return (
+                    <Tooltip key={`${weekIdx}-${dayIdx}`}>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={`w-full aspect-square rounded-sm ${colorClass} cursor-pointer hover:ring-2 hover:ring-ring transition-all`}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="text-sm">
+                          <div className="font-medium">
+                            {day.count} {day.count === 1 ? 'submission' : 'submissions'}
+                          </div>
+                          <div className="text-xs text-primary-foreground">
+                            {formatDate(day.date)}
+                          </div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                })}
               </div>
-            </TooltipProvider>
+            ))}
           </div>
+        </TooltipProvider>
+      </div>
     </div>
   )
 }

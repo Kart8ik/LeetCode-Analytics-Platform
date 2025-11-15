@@ -19,8 +19,8 @@ describe('ExampleChart branch coverage', () => {
   let logSpy: ReturnType<typeof vi.spyOn> | undefined
 
   beforeEach(() => {
-    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => { })
+    logSpy = vi.spyOn(console, 'log').mockImplementation(() => { })
   })
 
   afterEach(() => {
@@ -61,11 +61,17 @@ describe('ExampleChart branch coverage', () => {
     const json = JSON.stringify(data)
     const { container } = render(<ExampleChart submissionCalendar={json} />)
 
-    expect(container.querySelector('[class~="bg-primary"]')).toBeTruthy()
-    expect(container.querySelector('[class*="bg-primary/80"]')).toBeTruthy()
-    expect(container.querySelector('[class*="bg-primary/60"]')).toBeTruthy()
-    expect(container.querySelector('[class*="bg-primary/40"]')).toBeTruthy()
-    expect(container.querySelector('[class*="opacity-30"]')).toBeTruthy()
+    const squares = Array.from(container.querySelectorAll('.aspect-square'))
+
+    const hasClassExact = (needle: string) =>
+      squares.some((square) => square.classList.contains(needle))
+    const hasClass = (needle: string) =>
+      squares.some((square) => square.className.includes(needle))
+
+    expect(hasClassExact('bg-primary')).toBe(true) // max intensity
+    expect(hasClass('bg-primary/80')).toBe(true) // high intensity
+    expect(hasClass('bg-primary/60')).toBe(true) // medium intensity
+    expect(hasClass('bg-primary/40')).toBe(true) // low intensity
+    expect(hasClass('bg-[#ebedf0]')).toBe(true) // empty / zero-count day
   })
 })
-

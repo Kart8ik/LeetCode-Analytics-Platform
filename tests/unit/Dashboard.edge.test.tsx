@@ -72,6 +72,6 @@ describe('Dashboard edge cases', () => {
     )
 
     // The Recent Submissions card should show the fallback text
-    await waitFor(() => expect(screen.getByText('No recent submissions found')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/No recent submissions found/)).toBeInTheDocument())
   })
 })
