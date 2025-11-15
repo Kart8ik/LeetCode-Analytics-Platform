@@ -89,3 +89,12 @@ ehthumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Tests and reports
+tests/
+__tests__/
+*.test.*
+*.spec.*
+coverage/
+coverage.html
+coverage.lcov
