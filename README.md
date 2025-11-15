@@ -196,9 +196,6 @@ npm run check-coverage   # Ensure coverage ≥ 80% (used in CI)
 - [@adma77ya](https://github.com/adma77ya) — Developer  
 - [@ABHISHEK-S-NAIR](https://github.com/ABHISHEK-S-NAIR) — Developer  
 
-Teaching Assistants: [@itsjiyapatel](https://github.com/itsjiyapatel), [@Greesh-SE](https://github.com/Greesh-SE), [@Siri2512](https://github.com/Siri2512), [@Hurry-sh](https://github.com/Hurry-sh), [@pes2ug22cs137](https://github.com/pes2ug22cs137)  
-Faculty Supervisor: [@Animesh](https://github.com/Animesh)
-
 ## License
 
-This project is developed for educational purposes as part of PES University’s UE23CS341A curriculum (Academic Year 2025, Semester 5, Section A). Feel free to reference or adapt the code for learning and internal coursework; obtain instructor approval before reusing it elsewhere.
+This project is developed for educational purposes as part of PES University’s UE23CS341A curriculum (Academic Year 2025, Semester 5, Section A). Feel free to reference or adapt the code for learning and internal coursework.
