@@ -130,7 +130,7 @@ python graphqlAPI_cronjob.py
 ```
 
 ### Scheduled run
-The GitHub Actions workflow `.github/workflows/leetcode_dummy_cron.yml` runs the script every 2 hours (`cron: "0 */2 * * *"`) using repository secrets:
+The GitHub Actions workflow `.github/workflows/leetcode_dummy_cron.yml` runs the script every 30 mins (`cron: "30 * * * *"`) using repository secrets:
 
 | Secret name             | Purpose                                  |
 |-------------------------|------------------------------------------|
