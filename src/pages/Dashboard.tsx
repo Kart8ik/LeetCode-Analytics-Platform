@@ -342,167 +342,163 @@ Based on this profile, please provide personalized coding practice recommendatio
             </div>
           </Card>
         </div>
-        <div className="flex sm:flex-col gap-4 overflow-x-scroll sm:overflow-x-hidden w-full">
-        {/* Flexbox 3: Streak Stats and Language Stats */}
-        <div className="flex flex-row gap-4 sm:w-full">
-          <Card className="flex-1 flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0">
-            <CardHeader>
-              <CardTitle>Streak Stats</CardTitle>
-              <CardDescription>Your streak statistics</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-center gap-6">
-              <div className="flex flex-col items-center justify-center p-6 rounded-lg border bg-gradient-to-br from-[var(--primary)]/20 to-[var(--chart-3)]/20 dark:from-[var(--primary)]/20 dark:to-[var(--chart-3)]/20">
-                <div className="flex items-center gap-3 mb-2">
-                  <Flame className="h-6 w-6 text-primary" />
-                  <CardDescription className="text-sm font-medium text-foreground mb-0">
-                    Max Streak
-                  </CardDescription>
+        <div className="flex flex-row gap-4 w-full overflow-x-auto snap-x snap-mandatory scroll-smooth sm:grid sm:grid-cols-2 sm:overflow-visible sm:snap-none sm:scroll-auto">
+          {/* Flexbox 3: Streak Stats and Language Stats */}
+          <Card className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center">
+              <CardHeader>
+                <CardTitle>Streak Stats</CardTitle>
+                <CardDescription>Your streak statistics</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col justify-center gap-6">
+                <div className="flex flex-col items-center justify-center p-6 rounded-lg border bg-gradient-to-br from-[var(--primary)]/20 to-[var(--chart-3)]/20 dark:from-[var(--primary)]/20 dark:to-[var(--chart-3)]/20">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Flame className="h-6 w-6 text-primary" />
+                    <CardDescription className="text-sm font-medium text-foreground mb-0">
+                      Max Streak
+                    </CardDescription>
+                  </div>
+                  <CardTitle className="text-4xl font-bold text-primary">
+                    {userDetails?.progress_stats?.streak_count ?? 0}
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">highest streak you have had</p>
                 </div>
-                <CardTitle className="text-4xl font-bold text-primary">
-                  {userDetails?.progress_stats?.streak_count ?? 0}
-                </CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">highest streak you have had</p>
-              </div>
-              
-              <div className="flex flex-col items-center justify-center p-6 rounded-lg border bg-gradient-to-br from-[var(--chart-2)]/20 to-[var(--chart-1)]/20 dark:from-[var(--chart-2)]/20 dark:to-[var(--chart-1)]/20">
-                <div className="flex items-center gap-3 mb-2">
-                  <Calendar className="h-6 w-6 text-[var(--chart-2)]" />
-                  <CardDescription className="text-sm font-medium text-foreground mb-0">
-                    Total Active Days
-                  </CardDescription>
+                
+                <div className="flex flex-col items-center justify-center p-6 rounded-lg border bg-gradient-to-br from-[var(--chart-2)]/20 to-[var(--chart-1)]/20 dark:from-[var(--chart-2)]/20 dark:to-[var(--chart-1)]/20">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Calendar className="h-6 w-6 text-[var(--chart-2)]" />
+                    <CardDescription className="text-sm font-medium text-foreground mb-0">
+                      Total Active Days
+                    </CardDescription>
+                  </div>
+                  <CardTitle className="text-4xl font-bold text-[var(--chart-2)]">
+                    {userDetails?.progress_stats?.total_active_days ?? 0}
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">days of coding</p>
                 </div>
-                <CardTitle className="text-4xl font-bold text-[var(--chart-2)]">
-                  {userDetails?.progress_stats?.total_active_days ?? 0}
-                </CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">days of coding</p>
-              </div>
-            </CardContent>
+              </CardContent>
           </Card>
 
-          <Card className="flex-1 flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0">
-            <CardHeader>
-              <CardTitle>Language Stats</CardTitle>
-              <CardDescription>Problems solved by programming language</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto max-h-[400px]">
-              {languageStats.length === 0 ? (
-                <div className="flex items-center justify-center py-8 text-muted-foreground">
-                  <p className="text-sm">No language stats found</p>
-                </div>
-              ) : (
-                <div className="space-y-3 pr-2">
-                  {languageStats.map((lang, index) => (
-                    <div 
-                      key={`${lang.language_name}-${index}`}
-                      className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {lang.language_name}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-sm font-semibold text-foreground">
-                          {lang.problems_solved}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          solved
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-        {/* Flexbox 4: Recent Submissions and Topic Stats */}
-        <div className="flex flex-row gap-4 sm:w-full">
-          <Card className="flex-1 flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0">
-            <CardHeader>
-              <CardTitle>Recent Submissions</CardTitle>
-              <CardDescription>Your latest solved problems</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto max-h-[400px]">
-              {recentSubmissions.length === 0 ? (
-                <div className="flex items-center justify-center py-8 text-muted-foreground">
-                  <p className="text-sm">No recent submissions found or they might be private for your profile</p>
-                </div>
-              ) : (
-                <div className="space-y-4 pr-2">
-                  {recentSubmissions.map((submission) => (
-                    <div 
-                      key={submission.id} 
-                      className="flex items-center gap-2 sm:gap-4 p-2 rounded-lg hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex size-8 sm:size-9 items-center justify-center rounded-full font-semibold text-xs sm:text-sm shrink-0 bg-green-500/10 text-green-600 dark:text-green-400">
-                        ✓
-                      </div>
-                      <div className="flex-1 space-y-1 min-w-0">
-                        <p className="text-sm py-1 font-medium leading-tight">
-                          {submission.title}
-                        </p>
-                        <a
-                          href={`https://leetcode.com/problems/${submission.titleSlug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors truncate block"
-                        >
-                          View on LeetCode →
-                        </a>
-                      </div>
-                      <div className="text-xs text-muted-foreground hidden sm:block whitespace-nowrap">
-                        {formatTimeAgo(submission.timestamp)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="flex-1 flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0">
-            <CardHeader>
-              <CardTitle>Topic Stats</CardTitle>
-              <CardDescription>Your topic-wise problem solving statistics</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto max-h-[400px]">
-              {topicStats.length === 0 ? (
-                <div className="flex items-center justify-center py-8 text-muted-foreground">
-                  <p className="text-sm">No topic stats found</p>
-                </div>
-              ) : (
-                <div className="space-y-3 pr-2">
-                  {topicStats.map((topic, index) => (
-                    <div 
-                      key={`${topic.tag_name}-${topic.difficulty_level}-${index}`}
-                      className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+          <Card className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center">
+              <CardHeader>
+                <CardTitle>Language Stats</CardTitle>
+                <CardDescription>Problems solved by programming language</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-y-auto max-h-[400px]">
+                {languageStats.length === 0 ? (
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                    <p className="text-sm">No language stats found</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 pr-2">
+                    {languageStats.map((lang, index) => (
+                      <div 
+                        key={`${lang.language_name}-${index}`}
+                        className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
-                            {topic.tag_name}
+                            {lang.language_name}
                           </p>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${getDifficultyColor(topic.difficulty_level)}`}>
-                            {formatDifficulty(topic.difficulty_level)}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-sm font-semibold text-foreground">
+                            {lang.problems_solved}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            solved
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-sm font-semibold text-foreground">
-                          {topic.problems_solved}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          solved
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
           </Card>
-        </div>
+            {/* Flexbox 4: Recent Submissions and Topic Stats */}
+          <Card className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center">
+              <CardHeader>
+                <CardTitle>Recent Submissions</CardTitle>
+                <CardDescription>Your latest solved problems</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-y-auto max-h-[400px]">
+                {recentSubmissions.length === 0 ? (
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                    <p className="text-sm">No recent submissions found or they might be private for your profile</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 pr-2">
+                    {recentSubmissions.map((submission) => (
+                      <div
+                        key={submission.id}
+                        className="flex items-center gap-2 sm:gap-4 p-2 rounded-lg hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex size-8 sm:size-9 items-center justify-center rounded-full font-semibold text-xs sm:text-sm shrink-0 bg-green-500/10 text-green-600 dark:text-green-400">
+                          ✓
+                        </div>
+                        <div className="flex-1 space-y-1 min-w-0">
+                          <p className="text-sm py-1 font-medium leading-tight">
+                            {submission.title}
+                          </p>
+                          <a
+                            href={`https://leetcode.com/problems/${submission.titleSlug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors truncate block"
+                          >
+                            View on LeetCode →
+                          </a>
+                        </div>
+                        <div className="text-xs text-muted-foreground hidden sm:block whitespace-nowrap">
+                          {formatTimeAgo(submission.timestamp)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+          </Card>
+
+          <Card className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center">
+              <CardHeader>
+                <CardTitle>Topic Stats</CardTitle>
+                <CardDescription>Your topic-wise problem solving statistics</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-y-auto max-h-[400px]">
+                {topicStats.length === 0 ? (
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                    <p className="text-sm">No topic stats found</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 pr-2">
+                    {topicStats.map((topic, index) => (
+                      <div
+                        key={`${topic.tag_name}-${topic.difficulty_level}-${index}`}
+                        className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-sm font-medium truncate">
+                              {topic.tag_name}
+                            </p>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${getDifficultyColor(topic.difficulty_level)}`}>
+                              {formatDifficulty(topic.difficulty_level)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-sm font-semibold text-foreground">
+                            {topic.problems_solved}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            solved
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+          </Card>
         </div>
       </div>
     </>
