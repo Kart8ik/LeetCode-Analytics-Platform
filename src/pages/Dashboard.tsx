@@ -7,9 +7,9 @@ import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Flame, Calendar } from 'lucide-react'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { Button } from '@/components/ui/button'
 import { Copy } from 'lucide-react'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 
 interface RecentSubmission {
   id: string
@@ -246,40 +246,44 @@ Based on this profile, please provide personalized coding practice recommendatio
   return (
     <>
       <TopNavbar />
-      <div className="w-full space-y-6 px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6 bg-background">
+      <div className="w-full space-y-6 px-4 md:px-6 pt-4 md:pt-6 pb-24 sm:pb-6 bg-background">
         {/* Header */}
         {/* Flexbox 1: Stats Cards - Total Solved, Easy, Medium, Hard */}
         <div className="flex flex-col sm:flex-row gap-4 w-full">
-          <Card className="flex-1">
-            <CardHeader>
-              <CardDescription>Total Solved</CardDescription>
-              <CardTitle className="text-2xl">{userDetails?.problem_stats?.total_solved}</CardTitle>
-            </CardHeader>
-          </Card>
+          <div className="flex flex-2 flex-row gap-4 w-full">
+            <Card className="flex-1">
+              <CardHeader>
+                <CardDescription>Total Solved</CardDescription>
+                <CardTitle className="text-2xl">{userDetails?.problem_stats?.total_solved}</CardTitle>
+              </CardHeader>
+            </Card>
 
-          <Card className="flex-1">
-            <CardHeader>
-              <CardDescription>Easy Problems Solved</CardDescription>
-              <CardTitle className="text-2xl">{userDetails?.problem_stats?.easy_solved}</CardTitle>
-            </CardHeader>
-          </Card>
+            <Card className="flex-1">
+              <CardHeader>
+                <CardDescription>Easy Problems Solved</CardDescription>
+                <CardTitle className="text-2xl">{userDetails?.problem_stats?.easy_solved}</CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
+          <div className="flex flex-2 flex-row gap-4 w-full">
+            <Card className="flex-1">
+              <CardHeader>
+                <CardDescription>Medium Problems Solved</CardDescription>
+                <CardTitle className="text-2xl">{userDetails?.problem_stats?.medium_solved}</CardTitle>
+              </CardHeader>
+            </Card>
 
-          <Card className="flex-1">
-            <CardHeader>
-              <CardDescription>Medium Problems Solved</CardDescription>
-              <CardTitle className="text-2xl">{userDetails?.problem_stats?.medium_solved}</CardTitle>
-            </CardHeader>
-          </Card>
-
-          <Card className="flex-1">
-            <CardHeader>
-              <CardDescription>Hard Problems Solved</CardDescription>
-              <CardTitle className="text-2xl">{userDetails?.problem_stats?.hard_solved}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className="flex-1 p-0 overflow-hidden flex">
-            <HoverCard>
-              <HoverCardTrigger asChild>
+            <Card className="flex-1">
+              <CardHeader>
+                <CardDescription>Hard Problems Solved</CardDescription>
+                <CardTitle className="text-2xl">{userDetails?.problem_stats?.hard_solved}</CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
+          <div className="flex flex-1 flex-row gap-4 w-full">
+          <Card className="flex-1 min-h-[100px] p-0 overflow-hidden flex">
+            <Sheet>
+              <SheetTrigger asChild>
                 <Button 
                   className="w-full h-full rounded-none border-0 flex-1 text-xl" 
                   variant="default"
@@ -287,9 +291,12 @@ Based on this profile, please provide personalized coding practice recommendatio
                 >
                   Get Custom Prompt
                 </Button>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-[500px] max-h-[600px] overflow-y-auto">
-                <div className="space-y-4">
+              </SheetTrigger>
+              <SheetContent
+                side="bottom"
+                className="max-h-[85vh] sm:max-w-xl overflow-y-auto"
+              >
+                <div className="space-y-4 p-2 sm:p-0">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-semibold">Custom Chatbot Prompt</h4>
                     <Button
@@ -312,12 +319,13 @@ Based on this profile, please provide personalized coding practice recommendatio
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Click the copy button to copy this prompt and use it with any AI chatbot for personalized coding recommendations.
+                    Tap the copy button to use this prompt with any AI chatbot for personalized coding recommendations.
                   </p>
                 </div>
-              </HoverCardContent>
-            </HoverCard>
+              </SheetContent>
+            </Sheet>
           </Card>
+          </div>
         </div>
 
         {/* Flexbox 2: Chart Section */}
@@ -327,15 +335,17 @@ Based on this profile, please provide personalized coding practice recommendatio
               <CardTitle>Solving Progress</CardTitle>
               <CardDescription>Monthly problem solving statistics</CardDescription>
             </CardHeader>
-            <CardContent className="pl-2">
-              <ExampleChart submissionCalendar={userDetails?.progress_stats?.submission_calendar_json} />
-            </CardContent>
+            <div className="pl-4 pr-4 sm:pl-0 sm:pr-0">
+              <CardContent className="pl-2 overflow-x-scroll sm:overflow-x-hidden">
+                <ExampleChart submissionCalendar={userDetails?.progress_stats?.submission_calendar_json} />
+              </CardContent>
+            </div>
           </Card>
         </div>
-
+        <div className="flex sm:flex-col gap-4 overflow-x-scroll sm:overflow-x-hidden w-full">
         {/* Flexbox 3: Streak Stats and Language Stats */}
-        <div className="flex flex-col lg:flex-row gap-4 w-full">
-          <Card className="flex-1 flex flex-col">
+        <div className="flex flex-row gap-4 sm:w-full">
+          <Card className="flex-1 flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0">
             <CardHeader>
               <CardTitle>Streak Stats</CardTitle>
               <CardDescription>Your streak statistics</CardDescription>
@@ -369,7 +379,7 @@ Based on this profile, please provide personalized coding practice recommendatio
             </CardContent>
           </Card>
 
-          <Card className="flex-1 flex flex-col">
+          <Card className="flex-1 flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0">
             <CardHeader>
               <CardTitle>Language Stats</CardTitle>
               <CardDescription>Problems solved by programming language</CardDescription>
@@ -407,8 +417,8 @@ Based on this profile, please provide personalized coding practice recommendatio
           </Card>
         </div>
         {/* Flexbox 4: Recent Submissions and Topic Stats */}
-        <div className="flex flex-col lg:flex-row gap-4 w-full">
-          <Card className="flex-1 flex flex-col">
+        <div className="flex flex-row gap-4 sm:w-full">
+          <Card className="flex-1 flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0">
             <CardHeader>
               <CardTitle>Recent Submissions</CardTitle>
               <CardDescription>Your latest solved problems</CardDescription>
@@ -451,7 +461,7 @@ Based on this profile, please provide personalized coding practice recommendatio
             </CardContent>
           </Card>
 
-          <Card className="flex-1 flex flex-col">
+          <Card className="flex-1 flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0">
             <CardHeader>
               <CardTitle>Topic Stats</CardTitle>
               <CardDescription>Your topic-wise problem solving statistics</CardDescription>
@@ -492,6 +502,7 @@ Based on this profile, please provide personalized coding practice recommendatio
               )}
             </CardContent>
           </Card>
+        </div>
         </div>
       </div>
     </>

@@ -5,6 +5,7 @@ import Login from '@/Pages/Login'
 import SignUp from '@/Pages/SignUp'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { Toaster } from 'sonner'
+import { useIsMobile } from '@/hooks/use-mobile';
 
 function ProtectedRoute() {
   const { user, loading } = useAuth();
@@ -35,9 +36,10 @@ function Layout() {
 }
 
 export default function App() {
+  const isMobile = useIsMobile();
   return (
     <BrowserRouter>
-      <Toaster richColors position="bottom-right" />
+      <Toaster richColors position={isMobile ? 'top-right' : 'bottom-right'} duration={700} />
       <AuthProvider>
         <Layout/>
       </AuthProvider>
