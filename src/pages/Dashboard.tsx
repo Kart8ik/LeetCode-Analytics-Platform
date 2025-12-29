@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ExampleChart } from '@/components/ExampleChart'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import TopNavbar from '@/components/TopNavbar'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
@@ -34,6 +34,10 @@ interface LanguageStat {
 const Dashboard = () => {
   const { user} = useAuth()
   const [userDetails, setUserDetails] = useState<any>(null)
+  const [activeSlide, setActiveSlide] = useState(0)
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+  const SLIDE_COUNT = 4
 
   // Format user details as a chatbot prompt
   const formattedPrompt = useMemo(() => {
@@ -117,6 +121,29 @@ Based on this profile, please provide personalized coding practice recommendatio
       toast.error('Failed to copy prompt')
     }
   }
+
+  // Track active slide in the horizontal stats section
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      const center = container.scrollLeft + container.clientWidth / 2
+      const distances = cardRefs.current.map((card) => {
+        if (!card) return Number.MAX_VALUE
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2
+        return Math.abs(cardCenter - center)
+      })
+      const nearestIndex = distances.indexOf(Math.min(...distances))
+      if (nearestIndex !== -1 && nearestIndex !== activeSlide) {
+        setActiveSlide(nearestIndex)
+      }
+    }
+
+    handleScroll()
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [activeSlide])
 
 
   // Parse recent submissions from JSON string
@@ -342,9 +369,17 @@ Based on this profile, please provide personalized coding practice recommendatio
             </div>
           </Card>
         </div>
-        <div className="flex flex-row gap-4 w-full overflow-x-auto snap-x snap-mandatory scroll-smooth sm:grid sm:grid-cols-2 sm:overflow-visible sm:snap-none sm:scroll-auto">
+        <div
+          ref={scrollContainerRef}
+          className="flex flex-row gap-4 w-full overflow-x-auto snap-x snap-mandatory scroll-smooth sm:grid sm:grid-cols-2 sm:overflow-visible sm:snap-none sm:scroll-auto"
+        >
           {/* Flexbox 3: Streak Stats and Language Stats */}
-          <Card className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center">
+          <Card
+            ref={(el) => {
+              cardRefs.current[0] = el
+            }}
+            className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center"
+          >
               <CardHeader>
                 <CardTitle>Streak Stats</CardTitle>
                 <CardDescription>Your streak statistics</CardDescription>
@@ -378,7 +413,12 @@ Based on this profile, please provide personalized coding practice recommendatio
               </CardContent>
           </Card>
 
-          <Card className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center">
+          <Card
+            ref={(el) => {
+              cardRefs.current[1] = el
+            }}
+            className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center"
+          >
               <CardHeader>
                 <CardTitle>Language Stats</CardTitle>
                 <CardDescription>Problems solved by programming language</CardDescription>
@@ -415,7 +455,12 @@ Based on this profile, please provide personalized coding practice recommendatio
               </CardContent>
           </Card>
             {/* Flexbox 4: Recent Submissions and Topic Stats */}
-          <Card className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center">
+          <Card
+            ref={(el) => {
+              cardRefs.current[2] = el
+            }}
+            className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center"
+          >
               <CardHeader>
                 <CardTitle>Recent Submissions</CardTitle>
                 <CardDescription>Your latest solved problems</CardDescription>
@@ -458,7 +503,12 @@ Based on this profile, please provide personalized coding practice recommendatio
               </CardContent>
           </Card>
 
-          <Card className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center">
+          <Card
+            ref={(el) => {
+              cardRefs.current[3] = el
+            }}
+            className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center"
+          >
               <CardHeader>
                 <CardTitle>Topic Stats</CardTitle>
                 <CardDescription>Your topic-wise problem solving statistics</CardDescription>
@@ -499,6 +549,15 @@ Based on this profile, please provide personalized coding practice recommendatio
                 )}
               </CardContent>
           </Card>
+        </div>
+        <div className="flex justify-center gap-2 mb-2 sm:hidden">
+          {Array.from({ length: SLIDE_COUNT }).map((_, idx) => (
+            <span
+              key={idx}
+              className={`h-2 w-2 rounded-full transition-colors ${activeSlide === idx ? 'bg-primary' : 'bg-muted-foreground/30'
+                }`}
+            />
+          ))}
         </div>
       </div>
     </>
