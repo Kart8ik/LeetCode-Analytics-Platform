@@ -8,13 +8,13 @@ import { Toaster } from 'sonner'
 import { useIsMobile } from '@/hooks/use-mobile';
 
 function ProtectedRoute() {
-  const { user, loading } = useAuth();
+  const { user, loading, session } = useAuth();
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
-  if (!user) {
+  if (!user || !session) {
     return <Navigate to="/login" replace />;
   }
 
@@ -30,7 +30,7 @@ function Layout() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
           </Route>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
   )
 }
