@@ -131,9 +131,9 @@ export default function TopNavbar() {
         </div>
       </header>
 
-      {role === 'user' && (
         <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:hidden">
           <div className="flex items-center justify-evenly px-4 py-3">
+          {role === 'user' && (
             <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background p-1">
             {navItems.map(({ to, label, icon: Icon }) => {
               const isActive = location.pathname === to
@@ -151,6 +151,7 @@ export default function TopNavbar() {
               )
             })}
             </div>
+          )}
             <Button
               size="sm"
               className="md:size-default"
@@ -162,7 +163,6 @@ export default function TopNavbar() {
             </Button>
           </div>
         </nav>
-      )}
     </>
   )
 }
