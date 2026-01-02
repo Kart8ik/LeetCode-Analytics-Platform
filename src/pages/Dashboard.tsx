@@ -31,6 +31,23 @@ interface LanguageStat {
   problems_solved: number
 }
 
+interface UserDetails {
+  problem_stats?: {
+    total_solved?: number
+    easy_solved?: number
+    medium_solved?: number
+    hard_solved?: number
+  }
+  progress_stats?: {
+    streak_count?: number
+    total_active_days?: number
+    recent_submissions?: string | RecentSubmission[]
+    submission_calendar_json?: string
+  }
+  topic_stats?: TopicStat[]
+  language_stats?: LanguageStat[]
+}
+
 const Dashboard = () => {
   const { user} = useAuth()
   const [userDetails, setUserDetails] = useState<any>(null)
@@ -59,13 +76,13 @@ const Dashboard = () => {
 ${(() => {
         try {
           const langStats = Array.isArray(userDetails?.language_stats)
-            ? userDetails.language_stats
+            ? (userDetails.language_stats as LanguageStat[])
             : []
           if (langStats.length === 0) return '- No language statistics available'
           return langStats
-            .sort((a: any, b: any) => (b.problems_solved || 0) - (a.problems_solved || 0))
+            .sort((a: LanguageStat, b: LanguageStat) => (b.problems_solved || 0) - (a.problems_solved || 0))
             .slice(0, 5)
-            .map((lang: any) => `- ${lang.language_name}: ${lang.problems_solved} problems solved`)
+            .map((lang: LanguageStat) => `- ${lang.language_name}: ${lang.problems_solved} problems solved`)
             .join('\n')
         } catch {
           return '- No language statistics available'
@@ -76,13 +93,13 @@ ${(() => {
 ${(() => {
         try {
           const topicStats = Array.isArray(userDetails?.topic_stats)
-            ? userDetails.topic_stats
+            ? (userDetails.topic_stats as TopicStat[])
             : []
           if (topicStats.length === 0) return '- No topic statistics available'
           const topTopics = topicStats
-            .sort((a: any, b: any) => (b.problems_solved || 0) - (a.problems_solved || 0))
+            .sort((a: TopicStat, b: TopicStat) => (b.problems_solved || 0) - (a.problems_solved || 0))
             .slice(0, 10)
-            .map((topic: any) => `- ${topic.tag_name} (${topic.difficulty_level}): ${topic.problems_solved} problems`)
+            .map((topic: TopicStat) => `- ${topic.tag_name} (${topic.difficulty_level}): ${topic.problems_solved} problems`)
             .join('\n')
           return topTopics
         } catch {
@@ -94,14 +111,14 @@ ${(() => {
 ${(() => {
         try {
           const recentSubs = typeof userDetails?.progress_stats?.recent_submissions === 'string'
-            ? JSON.parse(userDetails.progress_stats.recent_submissions)
-            : userDetails?.progress_stats?.recent_submissions || []
+            ? (JSON.parse(userDetails.progress_stats.recent_submissions) as RecentSubmission[])
+            : (userDetails?.progress_stats?.recent_submissions as RecentSubmission[]) || []
           if (!Array.isArray(recentSubs) || recentSubs.length === 0) {
             return '- No recent submissions'
           }
           return recentSubs
             .slice(0, 5)
-            .map((sub: any) => `- ${sub.title || 'Unknown'}`)
+            .map((sub: RecentSubmission) => `- ${sub.title || 'Unknown'}`)
             .join('\n')
         } catch {
           return '- No recent submissions available'
@@ -117,7 +134,7 @@ Based on this profile, please provide personalized coding practice recommendatio
     try {
       await navigator.clipboard.writeText(formattedPrompt)
       toast.success('Prompt copied to clipboard!')
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy prompt')
     }
   }
@@ -157,8 +174,10 @@ Based on this profile, please provide personalized coding practice recommendatio
       
       const parsed = JSON.parse(jsonStr)
       return Array.isArray(parsed) ? parsed : []
-    } catch (error) {
-      console.error('Error parsing recent submissions:', error)
+    } catch (err) {
+      // debug-level log parsing problems; tests intentionally exercise malformed JSON
+      const msg = err instanceof Error ? err.message : String(err)
+      console.debug('Error parsing recent submissions:', msg)
       return []
     }
   }, [userDetails])
@@ -175,7 +194,8 @@ Based on this profile, please provide personalized coding practice recommendatio
       // Sort by problems_solved descending
       return [...stats].sort((a, b) => (b.problems_solved || 0) - (a.problems_solved || 0))
     } catch (error) {
-      console.error('Error parsing topic stats:', error)
+      const msg = error instanceof Error ? error.message : String(error)
+      console.debug('Error parsing topic stats:', msg)
       return []
     }
   }, [userDetails])
@@ -192,7 +212,8 @@ Based on this profile, please provide personalized coding practice recommendatio
       // Sort by problems_solved descending
       return [...stats].sort((a, b) => (b.problems_solved || 0) - (a.problems_solved || 0))
     } catch (error) {
-      console.error('Error parsing language stats:', error)
+      const msg = error instanceof Error ? error.message : String(error)
+      console.debug('Error parsing language stats:', msg)
       return []
     }
   }, [userDetails])
@@ -248,7 +269,7 @@ Based on this profile, please provide personalized coding practice recommendatio
       }
       const years = Math.floor(diff / 31536000)
       return `${years} year${years !== 1 ? 's' : ''} ago`
-    } catch (error) {
+    } catch {
       return 'Unknown'
     }
   }
@@ -260,8 +281,8 @@ Based on this profile, please provide personalized coding practice recommendatio
       if (error){
         toast.error(error.message)
       } else {
-        toast.success("User details fetched successfully")
-        console.log("user details", data)
+  toast.success("User details fetched successfully")
+  console.debug("user details", data)
         setUserDetails(data)
       }
     }
@@ -332,6 +353,7 @@ Based on this profile, please provide personalized coding practice recommendatio
                       onClick={handleCopyPrompt}
                       className="h-8 w-8 p-0"
                       disabled={!formattedPrompt}
+                      aria-label="Copy prompt"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>

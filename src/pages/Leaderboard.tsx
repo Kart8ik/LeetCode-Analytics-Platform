@@ -311,7 +311,7 @@ export default function Leaderboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map(user => {
+                    {filtered.map((user, _idx) => {
                       const dbRankNum = dbRankMap.get(user.user_id)
                       const dbRank = dbRankNum ?? '-'
                       const sem = user.semester ?? ''
@@ -325,9 +325,12 @@ export default function Leaderboard() {
                             ? 'bg-amber-50 dark:bg-amber-900/10'
                             : ''
 
+                      // Ensure a stable key even if test fixtures use `id` instead of `user_id`
+                      const rowKey = user.user_id ?? (user as { id?: string }).id ?? user.username ?? `row-${_idx}`
+
                       return (
                         <tr
-                          key={user.user_id}
+                          key={rowKey}
                           className={`border-b hover:bg-muted/10 transition-colors text-center ${highlight}`}
                         >
                           <td className="py-3 text-left pl-3 font-semibold text-muted-foreground">
