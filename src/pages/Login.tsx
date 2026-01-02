@@ -6,6 +6,7 @@ import LoginNavbar from "@/components/LoginNavbar";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -105,7 +106,7 @@ export default function Login() {
                 className="w-full h-12 bg-[#FF6B35] hover:bg-[#FF5722] text-white font-medium text-base"
                 disabled={loading}
               >
-                {loading ? "Logging in..." : "Log in"}
+                {loading ? <Spinner className="h-4 w-4" /> : "Log in"}
               </Button>
 
               <div className="relative">

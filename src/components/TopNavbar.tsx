@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
+import {Spinner} from '@/components/ui/spinner'
 
 export default function TopNavbar() {
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false)
@@ -74,7 +75,7 @@ export default function TopNavbar() {
         onClick={handleLogout}
         disabled={isLoggingOut}
       >
-        {isLoggingOut ? 'Logging out...' : 'Logout'}
+        {isLoggingOut ? <Spinner className="h-4 w-4" /> : 'Logout'}
       </Button>
     </>
   )
@@ -159,7 +160,7 @@ export default function TopNavbar() {
               onClick={handleLogout}
               disabled={isLoggingOut}
             >
-              {isLoggingOut ? 'Logging out...' : 'Logout'}
+              {isLoggingOut ? <Spinner className="h-4 w-4" /> : 'Logout'}
             </Button>
           </div>
         </nav>

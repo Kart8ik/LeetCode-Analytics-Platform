@@ -50,7 +50,7 @@ interface UserDetails {
 
 const Dashboard = () => {
   const { user} = useAuth()
-  const [userDetails, setUserDetails] = useState<any>(null)
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null)
   const [activeSlide, setActiveSlide] = useState(0)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -342,16 +342,16 @@ Based on this profile, please provide personalized coding practice recommendatio
               </SheetTrigger>
               <SheetContent
                 side="bottom"
-                className="max-h-[85vh] sm:max-w-xl overflow-y-auto"
+                className="max-h-[85vh] sm:max-w-xl sm:ml-4 rounded-xl overflow-y-auto"
               >
-                <div className="space-y-4 p-2 sm:p-0">
+                <div className="space-y-4 p-2">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-semibold">Custom Chatbot Prompt</h4>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={handleCopyPrompt}
-                      className="h-8 w-8 p-0"
+                      className="h-8 w-8 p-0 mr-10"
                       disabled={!formattedPrompt}
                       aria-label="Copy prompt"
                     >
