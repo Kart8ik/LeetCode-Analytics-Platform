@@ -8,8 +8,8 @@ export default function TopNavbar() {
   const { isDark, toggleTheme } = useAuth()
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur border-b border-border shadow-sm">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4 md:px-6 py-4">
+    <header className="relative z-50 w-full border-b border-border bg-background shadow-sm">
+      <div className="flex flex-row items-start sm:items-center justify-between gap-4 px-4 md:px-6 py-4">
         <div className="flex items-center gap-3">
           <img 
             src={isDark ? LogoLight : LogoDark} 
@@ -18,7 +18,7 @@ export default function TopNavbar() {
           />
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">LeetTrack</h1>
-            <p className="text-muted-foreground mt-1 text-sm md:text-base">
+            <p className="text-muted-foreground mt-1 text-sm md:text-base hidden sm:block">
               Track your coding journey with your friends
             </p>
           </div>

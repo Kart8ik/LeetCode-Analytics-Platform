@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode, startTransition } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
@@ -57,17 +57,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
                 const nextSession = data.session ?? null;
                 const nextUser = nextSession?.user ?? null;
+                const nextRole = resolveRole(nextUser);
 
-                setSession(nextSession);
-                setUser(nextUser);
-                setRole(resolveRole(nextUser));
+                // Batch all state updates together using React's automatic batching
+                startTransition(() => {
+                    setSession(nextSession);
+                    setUser(nextUser);
+                    setRole(nextRole);
+                    setLoading(false);
+                });
             } catch (err) {
                 console.error("Failed to fetch auth session", err);
-                setSession(null);
-                setUser(null);
-                setRole(null);
+                startTransition(() => {
+                    setSession(null);
+                    setUser(null);
+                    setRole(null);
+                    setLoading(false);
+                });
             }
-            setLoading(false);
         };
         init();
 
