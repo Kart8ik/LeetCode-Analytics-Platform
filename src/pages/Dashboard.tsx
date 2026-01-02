@@ -31,23 +31,6 @@ interface LanguageStat {
   problems_solved: number
 }
 
-interface UserDetails {
-  problem_stats?: {
-    total_solved?: number
-    easy_solved?: number
-    medium_solved?: number
-    hard_solved?: number
-  }
-  progress_stats?: {
-    streak_count?: number
-    total_active_days?: number
-    recent_submissions?: string | RecentSubmission[]
-    submission_calendar_json?: string
-  }
-  topic_stats?: TopicStat[]
-  language_stats?: LanguageStat[]
-}
-
 const Dashboard = () => {
   const { user } = useAuth()
   const [userDetails, setUserDetails] = useState<any>(null)
