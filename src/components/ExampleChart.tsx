@@ -4,7 +4,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@/components/ui/responsive-tooltip"
 
 interface SubmissionCalendarProps {
   submissionCalendar?: string | null
