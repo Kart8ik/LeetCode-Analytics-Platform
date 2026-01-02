@@ -4,7 +4,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@/components/ui/responsive-tooltip"
 
 interface SubmissionCalendarProps {
   submissionCalendar?: string | null
@@ -192,16 +192,15 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
   }, [calendarGrid.length, monthLabels])
 
   return (
-    <div className="flex flex-col gap-2 w-full">
+    <div className="flex w-full flex-col gap-2">
       {/* Month labels row */}
-      <div className="flex w-full gap-1 pl-4">
-
+      <div className="flex w-full gap-1 sm:pl-4">
         {/* Month labels aligned with calendar weeks */}
-        <div className="flex flex-row gap-1 flex-1">
+        <div className="flex flex-row gap-1 sm:flex-1">
           {monthLabelArray.map((month, weekIdx) => (
-            <div key={weekIdx} className="flex-1 flex items-start">
+            <div key={weekIdx} className="flex sm:flex-1 w-4 shrink-0 items-start justify-center">
               {month && (
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                <span className="whitespace-nowrap text-xs text-muted-foreground">
                   {month}
                 </span>
               )}
@@ -211,29 +210,25 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
       </div>
 
       {/* Calendar grid */}
-      <div className="relative flex w-full gap-1 pl-4">
-
+      <div className="relative flex gap-1 sm:pl-4">
         {/* Calendar squares - weeks as columns */}
         <TooltipProvider>
-          <div
-            ref={calendarRef}
-            className="flex flex-row gap-1 flex-1"
-          >
+          <div ref={calendarRef} className="flex flex-row gap-1 sm:flex-1">
             {calendarGrid.map((week, weekIdx) => (
-              <div key={weekIdx} className="flex flex-col gap-1 flex-1">
+              <div key={weekIdx} className="flex max-sm:w-4 max-sm:shrink-0 sm:flex-1 flex-col gap-1">
                 {week.map((day, dayIdx) => {
                   const today = new Date()
                   const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
                   const isFuture = day.date > todayUTC
-                  const colorClass = isFuture
-                    ? 'bg-[#ebedf0] dark:bg-[#161b22] opacity-30'
+                  const colorClass = isFuture 
+                    ? 'bg-[#ebedf0] dark:bg-[#161b22] opacity-30' 
                     : getColorIntensity(day.count, maxCount)
 
                   return (
                     <Tooltip key={`${weekIdx}-${dayIdx}`}>
                       <TooltipTrigger asChild>
                         <div
-                          className={`w-full aspect-square rounded-sm ${colorClass} cursor-pointer hover:ring-2 hover:ring-ring transition-all`}
+                          className={`aspect-square w-full rounded-sm ${colorClass} cursor-pointer hover:ring-2 hover:ring-ring transition-all`}
                         />
                       </TooltipTrigger>
                       <TooltipContent>
