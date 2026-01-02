@@ -194,7 +194,7 @@ export default function Leaderboard() {
   return (
     <>
       <TopNavbar />
-      <div className="w-full space-y-6 px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6 bg-background">
+      <div className="w-full space-y-6 px-4 pb-24 md:px-6 pt-4 md:pt-6 bg-background">
         <Card>
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-2xl font-semibold tracking-tight">Leaderboard</CardTitle>
@@ -302,7 +302,7 @@ export default function Leaderboard() {
                   <thead>
                     <tr className="text-muted-foreground bg-muted/40 text-center">
                       <th className="py-3 px-3 text-left">Rank</th>
-                      <th className="py-3 px-3 text-left w-[50%]">Leader</th>
+                      <th className="py-3 px-3 text-left sm:w-[50%] w-auto">Leader</th>
                       <th className="py-3 px-3 text-center">Global Rank</th>
                       <th className="py-3 px-3 text-center">E,M,H</th>
                       <th className="py-3 px-3 text-center">Total</th>
@@ -352,7 +352,7 @@ export default function Leaderboard() {
                             </div>
                           </td>
 
-                          <td className="py-3 text-left w-[50%]">
+                          <td className="py-3 text-left sm:w-[50%] w-auto">
                             <div>
                               <div className="font-medium truncate max-w-[600px]">{user.real_name}</div>
                               <div className="text-xs text-muted-foreground">@{user.username}</div>

@@ -1,15 +1,15 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ExampleChart } from '@/components/ExampleChart'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import TopNavbar from '@/components/TopNavbar'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Flame, Calendar } from 'lucide-react'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { Button } from '@/components/ui/button'
 import { Copy } from 'lucide-react'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 
 interface RecentSubmission {
   id: string
@@ -50,7 +50,11 @@ interface UserDetails {
 
 const Dashboard = () => {
   const { user} = useAuth()
-  const [userDetails, setUserDetails] = useState<UserDetails | null>(null)
+  const [userDetails, setUserDetails] = useState<any>(null)
+  const [activeSlide, setActiveSlide] = useState(0)
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+  const SLIDE_COUNT = 4
 
   // Format user details as a chatbot prompt
   const formattedPrompt = useMemo(() => {
@@ -134,6 +138,29 @@ Based on this profile, please provide personalized coding practice recommendatio
       toast.error('Failed to copy prompt')
     }
   }
+
+  // Track active slide in the horizontal stats section
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      const center = container.scrollLeft + container.clientWidth / 2
+      const distances = cardRefs.current.map((card) => {
+        if (!card) return Number.MAX_VALUE
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2
+        return Math.abs(cardCenter - center)
+      })
+      const nearestIndex = distances.indexOf(Math.min(...distances))
+      if (nearestIndex !== -1 && nearestIndex !== activeSlide) {
+        setActiveSlide(nearestIndex)
+      }
+    }
+
+    handleScroll()
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [activeSlide])
 
 
   // Parse recent submissions from JSON string
@@ -267,40 +294,44 @@ Based on this profile, please provide personalized coding practice recommendatio
   return (
     <>
       <TopNavbar />
-      <div className="w-full space-y-6 px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6 bg-background">
+      <div className="w-full space-y-6 px-4 md:px-6 pt-4 md:pt-6 pb-24 sm:pb-6 bg-background">
         {/* Header */}
         {/* Flexbox 1: Stats Cards - Total Solved, Easy, Medium, Hard */}
         <div className="flex flex-col sm:flex-row gap-4 w-full">
-          <Card className="flex-1">
-            <CardHeader>
-              <CardDescription>Total Solved</CardDescription>
-              <CardTitle className="text-2xl">{userDetails?.problem_stats?.total_solved}</CardTitle>
-            </CardHeader>
-          </Card>
+          <div className="flex flex-2 flex-row gap-4 w-full">
+            <Card className="flex-1">
+              <CardHeader>
+                <CardDescription>Total Solved</CardDescription>
+                <CardTitle className="text-2xl">{userDetails?.problem_stats?.total_solved}</CardTitle>
+              </CardHeader>
+            </Card>
 
-          <Card className="flex-1">
-            <CardHeader>
-              <CardDescription>Easy Problems Solved</CardDescription>
-              <CardTitle className="text-2xl">{userDetails?.problem_stats?.easy_solved}</CardTitle>
-            </CardHeader>
-          </Card>
+            <Card className="flex-1">
+              <CardHeader>
+                <CardDescription>Easy Problems Solved</CardDescription>
+                <CardTitle className="text-2xl">{userDetails?.problem_stats?.easy_solved}</CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
+          <div className="flex flex-2 flex-row gap-4 w-full">
+            <Card className="flex-1">
+              <CardHeader>
+                <CardDescription>Medium Problems Solved</CardDescription>
+                <CardTitle className="text-2xl">{userDetails?.problem_stats?.medium_solved}</CardTitle>
+              </CardHeader>
+            </Card>
 
-          <Card className="flex-1">
-            <CardHeader>
-              <CardDescription>Medium Problems Solved</CardDescription>
-              <CardTitle className="text-2xl">{userDetails?.problem_stats?.medium_solved}</CardTitle>
-            </CardHeader>
-          </Card>
-
-          <Card className="flex-1">
-            <CardHeader>
-              <CardDescription>Hard Problems Solved</CardDescription>
-              <CardTitle className="text-2xl">{userDetails?.problem_stats?.hard_solved}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className="flex-1 p-0 overflow-hidden flex">
-            <HoverCard>
-              <HoverCardTrigger asChild>
+            <Card className="flex-1">
+              <CardHeader>
+                <CardDescription>Hard Problems Solved</CardDescription>
+                <CardTitle className="text-2xl">{userDetails?.problem_stats?.hard_solved}</CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
+          <div className="flex flex-1 flex-row gap-4 w-full">
+          <Card className="flex-1 min-h-[100px] p-0 overflow-hidden flex">
+            <Sheet>
+              <SheetTrigger asChild>
                 <Button 
                   className="w-full h-full rounded-none border-0 flex-1 text-xl" 
                   variant="default"
@@ -308,9 +339,12 @@ Based on this profile, please provide personalized coding practice recommendatio
                 >
                   Get Custom Prompt
                 </Button>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-[500px] max-h-[600px] overflow-y-auto">
-                <div className="space-y-4">
+              </SheetTrigger>
+              <SheetContent
+                side="bottom"
+                className="max-h-[85vh] sm:max-w-xl overflow-y-auto"
+              >
+                <div className="space-y-4 p-2 sm:p-0">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-semibold">Custom Chatbot Prompt</h4>
                     <Button
@@ -334,12 +368,13 @@ Based on this profile, please provide personalized coding practice recommendatio
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Click the copy button to copy this prompt and use it with any AI chatbot for personalized coding recommendations.
+                    Tap the copy button to use this prompt with any AI chatbot for personalized coding recommendations.
                   </p>
                 </div>
-              </HoverCardContent>
-            </HoverCard>
+              </SheetContent>
+            </Sheet>
           </Card>
+          </div>
         </div>
 
         {/* Flexbox 2: Chart Section */}
@@ -349,171 +384,202 @@ Based on this profile, please provide personalized coding practice recommendatio
               <CardTitle>Solving Progress</CardTitle>
               <CardDescription>Monthly problem solving statistics</CardDescription>
             </CardHeader>
-            <CardContent className="pl-2">
-              <ExampleChart submissionCalendar={userDetails?.progress_stats?.submission_calendar_json} />
-            </CardContent>
+            <div className="pl-4 pr-4 sm:pl-0 sm:pr-0">
+              <CardContent className="pl-2 overflow-x-scroll sm:overflow-x-hidden">
+                <ExampleChart submissionCalendar={userDetails?.progress_stats?.submission_calendar_json} />
+              </CardContent>
+            </div>
           </Card>
         </div>
-
-        {/* Flexbox 3: Streak Stats and Language Stats */}
-        <div className="flex flex-col lg:flex-row gap-4 w-full">
-          <Card className="flex-1 flex flex-col">
-            <CardHeader>
-              <CardTitle>Streak Stats</CardTitle>
-              <CardDescription>Your streak statistics</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-center gap-6">
-              <div className="flex flex-col items-center justify-center p-6 rounded-lg border bg-gradient-to-br from-[var(--primary)]/20 to-[var(--chart-3)]/20 dark:from-[var(--primary)]/20 dark:to-[var(--chart-3)]/20">
-                <div className="flex items-center gap-3 mb-2">
-                  <Flame className="h-6 w-6 text-primary" />
-                  <CardDescription className="text-sm font-medium text-foreground mb-0">
-                    Max Streak
-                  </CardDescription>
+        <div
+          ref={scrollContainerRef}
+          className="flex flex-row gap-4 w-full overflow-x-auto snap-x snap-mandatory scroll-smooth sm:grid sm:grid-cols-2 sm:overflow-visible sm:snap-none sm:scroll-auto"
+        >
+          {/* Flexbox 3: Streak Stats and Language Stats */}
+          <Card
+            ref={(el) => {
+              cardRefs.current[0] = el
+            }}
+            className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center"
+          >
+              <CardHeader>
+                <CardTitle>Streak Stats</CardTitle>
+                <CardDescription>Your streak statistics</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col justify-center gap-6">
+                <div className="flex flex-col items-center justify-center p-6 rounded-lg border bg-gradient-to-br from-[var(--primary)]/20 to-[var(--chart-3)]/20 dark:from-[var(--primary)]/20 dark:to-[var(--chart-3)]/20">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Flame className="h-6 w-6 text-primary" />
+                    <CardDescription className="text-sm font-medium text-foreground mb-0">
+                      Max Streak
+                    </CardDescription>
+                  </div>
+                  <CardTitle className="text-4xl font-bold text-primary">
+                    {userDetails?.progress_stats?.streak_count ?? 0}
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">highest streak you have had</p>
                 </div>
-                <CardTitle className="text-4xl font-bold text-primary">
-                  {userDetails?.progress_stats?.streak_count ?? 0}
-                </CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">highest streak you have had</p>
-              </div>
-              
-              <div className="flex flex-col items-center justify-center p-6 rounded-lg border bg-gradient-to-br from-[var(--chart-2)]/20 to-[var(--chart-1)]/20 dark:from-[var(--chart-2)]/20 dark:to-[var(--chart-1)]/20">
-                <div className="flex items-center gap-3 mb-2">
-                  <Calendar className="h-6 w-6 text-[var(--chart-2)]" />
-                  <CardDescription className="text-sm font-medium text-foreground mb-0">
-                    Total Active Days
-                  </CardDescription>
+                
+                <div className="flex flex-col items-center justify-center p-6 rounded-lg border bg-gradient-to-br from-[var(--chart-2)]/20 to-[var(--chart-1)]/20 dark:from-[var(--chart-2)]/20 dark:to-[var(--chart-1)]/20">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Calendar className="h-6 w-6 text-[var(--chart-2)]" />
+                    <CardDescription className="text-sm font-medium text-foreground mb-0">
+                      Total Active Days
+                    </CardDescription>
+                  </div>
+                  <CardTitle className="text-4xl font-bold text-[var(--chart-2)]">
+                    {userDetails?.progress_stats?.total_active_days ?? 0}
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">days of coding</p>
                 </div>
-                <CardTitle className="text-4xl font-bold text-[var(--chart-2)]">
-                  {userDetails?.progress_stats?.total_active_days ?? 0}
-                </CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">days of coding</p>
-              </div>
-            </CardContent>
+              </CardContent>
           </Card>
 
-          <Card className="flex-1 flex flex-col">
-            <CardHeader>
-              <CardTitle>Language Stats</CardTitle>
-              <CardDescription>Problems solved by programming language</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto max-h-[400px]">
-              {languageStats.length === 0 ? (
-                <div className="flex items-center justify-center py-8 text-muted-foreground">
-                  <p className="text-sm">No language stats found</p>
-                </div>
-              ) : (
-                <div className="space-y-3 pr-2">
-                  {languageStats.map((lang, index) => (
-                    <div 
-                      key={`${lang.language_name}-${index}`}
-                      className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {lang.language_name}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-sm font-semibold text-foreground">
-                          {lang.problems_solved}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          solved
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-        {/* Flexbox 4: Recent Submissions and Topic Stats */}
-        <div className="flex flex-col lg:flex-row gap-4 w-full">
-          <Card className="flex-1 flex flex-col">
-            <CardHeader>
-              <CardTitle>Recent Submissions</CardTitle>
-              <CardDescription>Your latest solved problems</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto max-h-[400px]">
-              {recentSubmissions.length === 0 ? (
-                <div className="flex items-center justify-center py-8 text-muted-foreground">
-                  <p className="text-sm">No recent submissions found or they might be private for your profile</p>
-                </div>
-              ) : (
-                <div className="space-y-4 pr-2">
-                  {recentSubmissions.map((submission) => (
-                    <div 
-                      key={submission.id} 
-                      className="flex items-center gap-2 sm:gap-4 p-2 rounded-lg hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex size-8 sm:size-9 items-center justify-center rounded-full font-semibold text-xs sm:text-sm shrink-0 bg-green-500/10 text-green-600 dark:text-green-400">
-                        ✓
-                      </div>
-                      <div className="flex-1 space-y-1 min-w-0">
-                        <p className="text-sm py-1 font-medium leading-tight">
-                          {submission.title}
-                        </p>
-                        <a
-                          href={`https://leetcode.com/problems/${submission.titleSlug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors truncate block"
-                        >
-                          View on LeetCode →
-                        </a>
-                      </div>
-                      <div className="text-xs text-muted-foreground hidden sm:block whitespace-nowrap">
-                        {formatTimeAgo(submission.timestamp)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="flex-1 flex flex-col">
-            <CardHeader>
-              <CardTitle>Topic Stats</CardTitle>
-              <CardDescription>Your topic-wise problem solving statistics</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto max-h-[400px]">
-              {topicStats.length === 0 ? (
-                <div className="flex items-center justify-center py-8 text-muted-foreground">
-                  <p className="text-sm">No topic stats found</p>
-                </div>
-              ) : (
-                <div className="space-y-3 pr-2">
-                  {topicStats.map((topic, index) => (
-                    <div 
-                      key={`${topic.tag_name}-${topic.difficulty_level}-${index}`}
-                      className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+          <Card
+            ref={(el) => {
+              cardRefs.current[1] = el
+            }}
+            className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center"
+          >
+              <CardHeader>
+                <CardTitle>Language Stats</CardTitle>
+                <CardDescription>Problems solved by programming language</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-y-auto max-h-[400px]">
+                {languageStats.length === 0 ? (
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                    <p className="text-sm">No language stats found</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 pr-2">
+                    {languageStats.map((lang, index) => (
+                      <div 
+                        key={`${lang.language_name}-${index}`}
+                        className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
-                            {topic.tag_name}
+                            {lang.language_name}
                           </p>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${getDifficultyColor(topic.difficulty_level)}`}>
-                            {formatDifficulty(topic.difficulty_level)}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-sm font-semibold text-foreground">
+                            {lang.problems_solved}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            solved
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-sm font-semibold text-foreground">
-                          {topic.problems_solved}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          solved
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
           </Card>
+            {/* Flexbox 4: Recent Submissions and Topic Stats */}
+          <Card
+            ref={(el) => {
+              cardRefs.current[2] = el
+            }}
+            className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center"
+          >
+              <CardHeader>
+                <CardTitle>Recent Submissions</CardTitle>
+                <CardDescription>Your latest solved problems</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-y-auto max-h-[400px]">
+                {recentSubmissions.length === 0 ? (
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                    <p className="text-sm">No recent submissions found or they might be private for your profile</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 pr-2">
+                    {recentSubmissions.map((submission) => (
+                      <div
+                        key={submission.id}
+                        className="flex items-center gap-2 sm:gap-4 p-2 rounded-lg hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex size-8 sm:size-9 items-center justify-center rounded-full font-semibold text-xs sm:text-sm shrink-0 bg-green-500/10 text-green-600 dark:text-green-400">
+                          ✓
+                        </div>
+                        <div className="flex-1 space-y-1 min-w-0">
+                          <p className="text-sm py-1 font-medium leading-tight">
+                            {submission.title}
+                          </p>
+                          <a
+                            href={`https://leetcode.com/problems/${submission.titleSlug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors truncate block"
+                          >
+                            View on LeetCode →
+                          </a>
+                        </div>
+                        <div className="text-xs text-muted-foreground hidden sm:block whitespace-nowrap">
+                          {formatTimeAgo(submission.timestamp)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+          </Card>
+
+          <Card
+            ref={(el) => {
+              cardRefs.current[3] = el
+            }}
+            className="w-full flex flex-col min-w-[calc(100vw-2rem)] sm:min-w-0 flex-shrink-0 snap-center"
+          >
+              <CardHeader>
+                <CardTitle>Topic Stats</CardTitle>
+                <CardDescription>Your topic-wise problem solving statistics</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-y-auto max-h-[400px]">
+                {topicStats.length === 0 ? (
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                    <p className="text-sm">No topic stats found</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 pr-2">
+                    {topicStats.map((topic, index) => (
+                      <div
+                        key={`${topic.tag_name}-${topic.difficulty_level}-${index}`}
+                        className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-sm font-medium truncate">
+                              {topic.tag_name}
+                            </p>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${getDifficultyColor(topic.difficulty_level)}`}>
+                              {formatDifficulty(topic.difficulty_level)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-sm font-semibold text-foreground">
+                            {topic.problems_solved}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            solved
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+          </Card>
+        </div>
+        <div className="flex justify-center gap-2 mb-2 sm:hidden">
+          {Array.from({ length: SLIDE_COUNT }).map((_, idx) => (
+            <span
+              key={idx}
+              className={`h-2 w-2 rounded-full transition-colors ${activeSlide === idx ? 'bg-primary' : 'bg-muted-foreground/30'
+                }`}
+            />
+          ))}
         </div>
       </div>
     </>
