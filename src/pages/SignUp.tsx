@@ -67,7 +67,6 @@ export default function SignUp() {
       },
     });
 
-    console.log(_signUpData);
 
     setLoading(false);
 
@@ -75,7 +74,6 @@ export default function SignUp() {
       console.error('Sign up error:', error);
       alert(error.message);
     } else {
-      console.log('Sign up successful:', _signUpData);
       alert("Sign up successful! Please check your email to verify your account.");
       navigate('/login');
     }

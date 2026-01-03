@@ -301,7 +301,6 @@ Based on this profile, please provide personalized coding practice recommendatio
       }
 
       toast.success('User details fetched successfully')
-      console.debug('user details', data)
       setUserDetails(data)
       setCacheValue(cacheKey, data ?? null)
     }
