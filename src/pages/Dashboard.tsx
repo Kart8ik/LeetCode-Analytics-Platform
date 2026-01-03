@@ -4,6 +4,7 @@ import { ExampleChart } from '@/components/ExampleChart'
 import { useEffect, useState, useMemo, useRef } from 'react'
 import TopNavbar from '@/components/TopNavbar'
 import { useAuth } from '@/context/AuthContext'
+import { useDataCache } from '@/context/DataCacheContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Flame, Calendar } from 'lucide-react'
@@ -50,6 +51,7 @@ interface UserDetails {
 
 const Dashboard = () => {
   const { user} = useAuth()
+  const { get: getCacheValue, set: setCacheValue } = useDataCache()
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null)
   const [activeSlide, setActiveSlide] = useState(0)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
@@ -274,22 +276,42 @@ Based on this profile, please provide personalized coding practice recommendatio
     }
   }
   useEffect(() => {
+    if (!user?.id) {
+      setUserDetails(null)
+      return
+    }
+
+    const cacheKey = `dashboard:user:${user.id}`
+    const cached = getCacheValue<UserDetails | null>(cacheKey)
+    if (cached !== undefined) {
+      setUserDetails(cached ?? null)
+      return
+    }
+
+    let isActive = true
     const fetchUserDetails = async () => {
       const { data, error } = await supabase.rpc('get_user_details', {
-        p_user_id: user?.id
+        p_user_id: user.id,
       })
-      if (error){
+      if (!isActive) return
+
+      if (error) {
         toast.error(error.message)
-      } else {
-  toast.success("User details fetched successfully")
-  console.debug("user details", data)
-        setUserDetails(data)
+        return
       }
+
+      toast.success('User details fetched successfully')
+      console.debug('user details', data)
+      setUserDetails(data)
+      setCacheValue(cacheKey, data ?? null)
     }
-    if (user?.id) {
-      fetchUserDetails()
+
+    fetchUserDetails()
+
+    return () => {
+      isActive = false
     }
-  }, [user])
+  }, [user?.id, getCacheValue, setCacheValue])
 
   return (
     <>

@@ -13,6 +13,7 @@ import { Medal } from 'lucide-react'
 import TopNavbar from '@/components/TopNavbar'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/AuthContext'
+import { useDataCache } from '@/context/DataCacheContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
@@ -43,42 +44,49 @@ export default function Leaderboard() {
   const [filterSection, setFilterSection] = useState<string | 'all'>('all')
   const [filterSemester, setFilterSemester] = useState<string | 'all'>('all')
   const { role } = useAuth()
+  const { get: getCacheValue, set: setCacheValue } = useDataCache()
 
   useEffect(() => {
+    const cacheKey = 'leaderboard:data'
+    const cached = getCacheValue<LeaderboardUser[] | null>(cacheKey)
+    if (cached !== undefined) {
+      setLeaderboard(cached ?? [])
+      setIsLoading(false)
+      return
+    }
+
+    let isActive = true
     const fetchLeaderboard = async () => {
       setIsLoading(true)
       try {
         const { data, error } = await supabase.rpc('get_leaderboard_json')
+        if (!isActive) return
+
         if (error) {
           toast.error(error.message)
         } else {
-          setLeaderboard(data || [])
+          const list = data || []
+          setLeaderboard(list)
+          setCacheValue(cacheKey, list)
           toast.success('Leaderboard fetched successfully')
         }
       } catch {
-        toast.error('Failed to fetch leaderboard')
-      } finally {
-        setIsLoading(false)
-      setIsLoading(true)
-      try {
-        const { data, error } = await supabase.rpc('get_leaderboard_json')
-        if (error) {
-          toast.error(error.message)
-        } else {
-          setLeaderboard(data || [])
-          toast.success('Leaderboard fetched successfully')
+        if (isActive) {
+          toast.error('Failed to fetch leaderboard')
         }
-      } catch {
-        toast.error('Failed to fetch leaderboard')
       } finally {
-        setIsLoading(false)
+        if (isActive) {
+          setIsLoading(false)
+        }
       }
     }
-    }
-
 
     fetchLeaderboard()
-  }, [])
+
+    return () => {
+      isActive = false
+    }
+  }, [getCacheValue, setCacheValue])
 
   const sections = useMemo(() => {
     return Array.from(new Set(leaderboard.map(u => u.section).filter(Boolean))).sort()

@@ -4,6 +4,7 @@ import Leaderboard from '@/pages/Leaderboard'
 import Login from '@/pages/Login'
 import SignUp from '@/pages/SignUp'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
+import { DataCacheProvider } from '@/context/DataCacheContext'
 import { Toaster } from 'sonner'
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -40,9 +41,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Toaster richColors position={isMobile ? 'top-right' : 'bottom-right'} duration={700} />
-      <AuthProvider>
-        <Layout/>
-      </AuthProvider>
+      <DataCacheProvider>
+        <AuthProvider>
+          <Layout/>
+        </AuthProvider>
+      </DataCacheProvider>
     </BrowserRouter>
   );
 }
