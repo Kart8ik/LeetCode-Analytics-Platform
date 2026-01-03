@@ -40,7 +40,6 @@ export default function Login() {
       console.error('Login error:', error);
       toast.error(error.message);
     } else {
-      console.log('Login successful:', _loginData);
       toast.success('Login successful!');
       navigate('/leaderboard');
     }

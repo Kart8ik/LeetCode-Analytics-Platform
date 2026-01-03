@@ -27,7 +27,7 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
         }
         // Unescape the string
         jsonStr = jsonStr.replace(/\\"/g, '"').replace(/\\\\/g, '\\')
-        console.log("jsonStr", jsonStr)
+        // console.log("jsonStr", jsonStr)
       }
 
       const parsed = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr
@@ -43,8 +43,8 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
           dataMap.set(normalizedKey, count)
         })
       }
-      console.log("dataMap in calendarData", dataMap)
-      console.log("First 5 entries:", Array.from(dataMap.entries()).slice(0, 5))
+      // console.log("dataMap in calendarData", dataMap)
+      // console.log("First 5 entries:", Array.from(dataMap.entries()).slice(0, 5))
       return dataMap
     } catch (error) {
       console.error('Error parsing submission calendar:', error)
@@ -97,9 +97,9 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
 
         // Debug: log first few lookups to see what's happening
         if (grid.length === 0 && day < 3 && calendarData.size > 0) {
-          console.log(`Date: ${date.toISOString()}, Looking for timestamp: ${timestamp}, found: ${count}`)
+          // console.log(`Date: ${date.toISOString()}, Looking for timestamp: ${timestamp}, found: ${count}`)
           const sampleKeys = Array.from(calendarData.keys()).slice(0, 5)
-          console.log(`Sample keys in data:`, sampleKeys)
+          // console.log(`Sample keys in data:`, sampleKeys)
           // Try to find a matching timestamp near our target
           const targetNum = parseInt(timestamp, 10)
           const nearbyKey = sampleKeys.find(key => {
@@ -107,7 +107,7 @@ export function ExampleChart({ submissionCalendar }: SubmissionCalendarProps) {
             return Math.abs(keyNum - targetNum) < 86400 // within 1 day
           })
           if (nearbyKey) {
-            console.log(`Found nearby key: ${nearbyKey}, value: ${calendarData.get(String(nearbyKey))}`)
+            // console.log(`Found nearby key: ${nearbyKey}, value: ${calendarData.get(String(nearbyKey))}`)
           }
         }
 

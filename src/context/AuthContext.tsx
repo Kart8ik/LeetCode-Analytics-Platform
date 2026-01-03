@@ -1,8 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 
-import { createContext, useContext, useEffect, useState, type ReactNode, startTransition } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode, startTransition } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { useDataCache } from "@/context/DataCacheContext";
 
 interface AuthContextType {
     session: Session | null;
@@ -48,6 +49,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState(true);
     const [role, setRole] = useState<string | null>(null);
     const [isDark, setIsDark] = useState<boolean>(true);
+    const { clear: clearCache } = useDataCache();
+    const lastUserIdRef = useRef<string | null>(null);
 
     useEffect(() => {
         const init = async () => {
@@ -90,6 +93,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             listener.subscription.unsubscribe();
         };
     }, []);
+
+    useEffect(() => {
+        const currentId = user?.id ?? null;
+        if (lastUserIdRef.current !== currentId) {
+            clearCache();
+            lastUserIdRef.current = currentId;
+        }
+    }, [user, clearCache]);
 
     // Initialize theme from localStorage or system preference
     useEffect(() => {
