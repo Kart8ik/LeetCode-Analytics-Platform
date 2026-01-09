@@ -16,6 +16,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useDataCache } from '@/context/DataCacheContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import { Spinner } from '@/components/ui/spinner'
 
 type LeaderboardUser = {
   user_id: string
@@ -294,7 +295,7 @@ export default function Leaderboard() {
             {isLoading ? (
               <div className="py-20 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="inline-block rounded-full animate-spin border-4 border-gray-200 border-t-primary w-12 h-12" />
+                  <Spinner className="size-10" />
                   <div className="mt-3 text-sm text-muted-foreground">Loading leaderboard…</div>
                 </div>
               </div>
@@ -302,7 +303,7 @@ export default function Leaderboard() {
               <>
                 {isFiltering && (
                   <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur flex items-center justify-center">
-                    <div className="inline-block rounded-full animate-spin border-4 border-gray-200 border-t-primary w-10 h-10" />
+                    <Spinner className="size-10" />
                   </div>
                 )}
 
