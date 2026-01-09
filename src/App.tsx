@@ -7,12 +7,13 @@ import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { DataCacheProvider } from '@/context/DataCacheContext'
 import { Toaster } from 'sonner'
 import { useIsMobile } from '@/hooks/use-mobile';
+import LoadingPage from '@/pages/Loading'
 
 function ProtectedRoute() {
   const { user, loading, session } = useAuth();
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return <LoadingPage />;
   }
 
   if (!user || !session) {
@@ -25,6 +26,7 @@ function ProtectedRoute() {
 function Layout() {
   return (
         <Routes>
+          <Route path="/loading" element={<LoadingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route element={<ProtectedRoute />}>
