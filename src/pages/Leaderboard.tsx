@@ -24,7 +24,6 @@ type LeaderboardUser = {
   user_id: string
   username: string
   real_name: string
-  user_url?: string
   section?: string | number
   semester?: string | number
   easy_solved: number
