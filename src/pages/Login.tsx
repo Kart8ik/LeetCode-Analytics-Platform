@@ -46,11 +46,11 @@ export default function Login() {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="fixed inset-0 flex flex-col overflow-hidden">
       <div className="flex-shrink-0">
         <LoginNavbar />
       </div>
-      <div className="flex flex-1 overflow-hidden min-h-0">
+      <div className="flex flex-1 overflow-hidden">
         {/* Left side - Empty space (60%) */}
         <div className="hidden md:flex md:w-[60%] bg-background border-r border-border overflow-hidden h-full">
           {isDark ? (
@@ -68,7 +68,7 @@ export default function Login() {
           )}
         </div>
         {/* Right side - Login form (40%) */}
-        <div className="flex-1 md:w-[40%] flex items-center justify-center p-8 bg-background overflow-y-auto">
+        <div className="flex-1 md:w-[40%] flex items-center justify-center p-6 sm:p-6 bg-background overflow-y-auto">
           <div className="w-full max-w-md space-y-6">
 
             <div className="space-y-2">
