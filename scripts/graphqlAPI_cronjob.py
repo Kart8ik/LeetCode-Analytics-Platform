@@ -178,7 +178,6 @@ def upsert_to_supabase(user_id: str, row: Dict[str, Any]):
     """Push data into all tables for one user."""
     # users
     supabase.table("users").update({
-        "user_url": row.get("user_url"),
         "global_rank": row.get("rank"),
         "updated_at": "now()"
     }).eq("user_id", user_id).execute()
@@ -280,7 +279,6 @@ def fetch_and_push():
             # --- Parse data (same logic for both full and fallback) ---
             prof = user.get("profile") or {}
             row["real_name"] = prof.get("realName")
-            row["user_url"] = prof.get("userAvatar")
             row["rank"] = prof.get("ranking")
 
             # Problem stats
