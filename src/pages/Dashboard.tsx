@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useDataCache } from '@/context/DataCacheContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { Flame, Calendar } from 'lucide-react'
+import { Flame, Calendar, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Copy } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -312,10 +312,41 @@ Based on this profile, please provide personalized coding practice recommendatio
     }
   }, [user?.id, getCacheValue, setCacheValue])
 
+  // Check if user data is empty (cronjob hasn't populated it yet)
+  const isDataEmpty = useMemo(() => {
+    if (!userDetails) return true
+    const stats = userDetails.problem_stats
+    if (!stats) return true
+    // If all problem counts are 0 or undefined, data likely hasn't been fetched
+    return (
+      (stats.total_solved ?? 0) === 0 &&
+      (stats.easy_solved ?? 0) === 0 &&
+      (stats.medium_solved ?? 0) === 0 &&
+      (stats.hard_solved ?? 0) === 0
+    )
+  }, [userDetails])
+
   return (
     <>
       <TopNavbar />
       <div className="w-full space-y-6 px-4 md:px-6 pt-4 md:pt-6 pb-24 sm:pb-6 bg-background">
+        {/* Data pending banner */}
+        {isDataEmpty && (
+          <div className="flex items-center gap-3 p-4 rounded-lg border border-primary/30 bg-primary/5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <Clock className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">
+                Your data is in queue to be fetched
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Please wait or come back after 15-20 minutes for your LeetCode stats to be synced. We're working on making this more seamless!
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         {/* Flexbox 1: Stats Cards - Total Solved, Easy, Medium, Hard */}
         <div className="flex flex-col sm:flex-row gap-4 w-full">
