@@ -5,7 +5,7 @@ import Login from '@/pages/Login'
 import SignUp from '@/pages/SignUp'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { DataCacheProvider } from '@/context/DataCacheContext'
-import { Toaster } from 'sonner'
+import { Toaster } from '@/components/ui/sonner'
 import { useIsMobile } from '@/hooks/use-mobile';
 import LoadingPage from '@/pages/Loading'
 
@@ -38,13 +38,17 @@ function Layout() {
   )
 }
 
-export default function App() {
+function ToasterWrapper() {
   const isMobile = useIsMobile();
+  return <Toaster richColors position={isMobile ? 'top-right' : 'bottom-right'} duration={700} />;
+}
+
+export default function App() {
   return (
     <BrowserRouter>
-      <Toaster richColors position={isMobile ? 'top-right' : 'bottom-right'} duration={700} />
       <DataCacheProvider>
         <AuthProvider>
+          <ToasterWrapper />
           <Layout/>
         </AuthProvider>
       </DataCacheProvider>

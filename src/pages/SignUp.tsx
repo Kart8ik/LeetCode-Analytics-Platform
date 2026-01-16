@@ -5,6 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import LoginNavbar from "@/components/LoginNavbar";
 import { useAuth } from "@/context/AuthContext"
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function SignUp() {
   const { isDark } = useAuth()
@@ -13,9 +15,9 @@ export default function SignUp() {
     email: "",
     password: "",
     realName: "",
-    userUrl: "",
     section: "",
     semester: "",
+    isPrivate: false,
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -57,13 +59,13 @@ export default function SignUp() {
       email,
       password,
       options: {
-        data: {
-          username,
-          real_name: formData.realName,
-          user_url: formData.userUrl,
-          section: formData.section,
-          semester: formData.semester,
-        },
+          data: {
+            username,
+            real_name: formData.realName,
+            section: formData.section,
+            semester: formData.semester,
+            is_private: formData.isPrivate,
+          },
       },
     });
 
@@ -109,10 +111,11 @@ export default function SignUp() {
               <h1 className="text-3xl font-bold tracking-tight">Create your account</h1>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">LeetCode Username</label>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="username" className="text-sm font-medium">LeetCode Username</Label>
                 <Input
+                  id="username"
                   type="text"
                   name="username"
                   placeholder="your-handle"
@@ -121,11 +124,15 @@ export default function SignUp() {
                   className="h-12 bg-muted border-0"
                   required
                 />
+                <p className="text-xs text-muted-foreground">
+                  Your leetCode username in your leetcode profile, used to get your coding details, make sure it's correct.
+                </p>
               </div> 
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                 <Input
+                  id="email"
                   type="email"
                   name="email"
                   placeholder="you@example.com"
@@ -134,11 +141,15 @@ export default function SignUp() {
                   className="h-12 bg-muted border-0"
                   required
                 />
+                <p className="text-xs text-muted-foreground">
+                  We'll send a verification link to confirm your account. Your email stays private.
+                </p>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Password</label>
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                 <Input
+                  id="password"
                   type="password"
                   name="password"
                   placeholder="••••••••"
@@ -147,38 +158,32 @@ export default function SignUp() {
                   className="h-12 bg-muted border-0"
                   required
                 />
+                <p className="text-xs text-muted-foreground">
+                  Minimum 6 characters. Use a strong password with letters, numbers, and symbols.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="realName" className="text-sm font-medium">Real Name</Label>
+                <Input
+                  id="realName"
+                  type="text"
+                  name="realName"
+                  placeholder="John Doe"
+                  value={formData.realName}
+                  onChange={handleChange}
+                  className="h-12 bg-muted border-0"
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Your full name for identification on the leaderboard.
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Real name</label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="section" className="text-sm font-medium">Section</Label>
                   <Input
-                    type="text"
-                    name="realName"
-                    placeholder="John Doe"
-                    value={formData.realName}
-                    onChange={handleChange}
-                    className="h-12 bg-muted border-0"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">User URL</label>
-                  <Input
-                    type="url"
-                    name="userUrl"
-                    placeholder="https://example.com/profile"
-                    value={formData.userUrl}
-                    onChange={handleChange}
-                    className="h-12 bg-muted border-0"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Section</label>
-                  <Input
+                    id="section"
                     type="text"
                     name="section"
                     placeholder="A"
@@ -187,10 +192,14 @@ export default function SignUp() {
                     className="h-12 bg-muted border-0"
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Your class section (e.g., A, B, C).
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Semester</label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="semester" className="text-sm font-medium">Semester</Label>
                   <Input
+                    id="semester"
                     type="text"
                     name="semester"
                     placeholder="5"
@@ -199,7 +208,30 @@ export default function SignUp() {
                     className="h-12 bg-muted border-0"
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Current semester number (1-8).
+                  </p>
                 </div>
+              </div>
+
+              {/* Public/Private Toggle */}
+              <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="public-toggle" className="text-sm font-medium">
+                    {formData.isPrivate ? "Private Profile" : "Public Profile"}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {formData.isPrivate 
+                      ? "Your stats will not be visible on the public leaderboard, only you and your friends can see your stats."
+                      : "Your stats will be visible on the public leaderboard, everyone can see your stats."}
+                  </p>
+                </div>
+                <Switch
+                  id="public-toggle"
+                  checked={formData.isPrivate}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isPrivate: checked })}
+                  className="data-[state=checked]:bg-[#FF6B35]"
+                />
               </div>
 
               <Button

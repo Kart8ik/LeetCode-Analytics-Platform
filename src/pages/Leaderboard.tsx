@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -9,7 +9,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select'
-import { Medal } from 'lucide-react'
+import { Medal, RefreshCcwIcon } from 'lucide-react'
 import TopNavbar from '@/components/TopNavbar'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/AuthContext'
@@ -17,6 +17,8 @@ import { useDataCache } from '@/context/DataCacheContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Spinner } from '@/components/ui/spinner'
+
+const REFRESH_COOLDOWN_MS = 5000
 
 type LeaderboardUser = {
   user_id: string
@@ -46,6 +48,52 @@ export default function Leaderboard() {
   const [filterSemester, setFilterSemester] = useState<string | 'all'>('all')
   const { role } = useAuth()
   const { get: getCacheValue, set: setCacheValue } = useDataCache()
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [refreshCooldown, setRefreshCooldown] = useState(false)
+  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Cleanup cooldown timer on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) {
+        clearTimeout(cooldownTimerRef.current)
+      }
+    }
+  }, [])
+
+  const fetchLeaderboardData = useCallback(async (showToast = true) => {
+    const cacheKey = 'leaderboard:data'
+    
+    try {
+      const { data, error } = await supabase.rpc('get_leaderboard_json')
+
+      if (error) {
+        if (showToast) toast.error('Failed to fetch', { description: error.message })
+        return false
+      }
+      
+      const list = data || []
+      setLeaderboard(list)
+      setCacheValue(cacheKey, list)
+      if (showToast) toast.success('Leaderboard refreshed')
+      return true
+    } catch {
+      if (showToast) toast.error('Failed to fetch leaderboard')
+      return false
+    }
+  }, [setCacheValue])
+
+  const handleRefresh = useCallback(async () => {
+    if (refreshCooldown || isRefreshing) return
+
+    setIsRefreshing(true)
+    await fetchLeaderboardData(true)
+    setIsRefreshing(false)
+
+    // Start cooldown with cleanup
+    setRefreshCooldown(true)
+    cooldownTimerRef.current = setTimeout(() => setRefreshCooldown(false), REFRESH_COOLDOWN_MS)
+  }, [refreshCooldown, isRefreshing, fetchLeaderboardData])
 
   useEffect(() => {
     const cacheKey = 'leaderboard:data'
@@ -57,37 +105,33 @@ export default function Leaderboard() {
     }
 
     let isActive = true
-    const fetchLeaderboard = async () => {
+    const init = async () => {
       setIsLoading(true)
       try {
         const { data, error } = await supabase.rpc('get_leaderboard_json')
         if (!isActive) return
 
         if (error) {
-          toast.error(error.message)
+          console.error('Failed to fetch leaderboard:', error.message)
         } else {
           const list = data || []
           setLeaderboard(list)
           setCacheValue(cacheKey, list)
-          toast.success('Leaderboard fetched successfully')
         }
-      } catch {
-        if (isActive) {
-          toast.error('Failed to fetch leaderboard')
-        }
+      } catch (err) {
+        if (isActive) console.error('Failed to fetch leaderboard:', err)
       } finally {
-        if (isActive) {
-          setIsLoading(false)
-        }
+        if (isActive) setIsLoading(false)
       }
     }
 
-    fetchLeaderboard()
+    init()
 
     return () => {
       isActive = false
     }
-  }, [getCacheValue, setCacheValue])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const sections = useMemo(() => {
     return Array.from(new Set(leaderboard.map(u => u.section).filter(Boolean))).sort()
@@ -206,9 +250,19 @@ export default function Leaderboard() {
       <div className="w-full space-y-6 px-4 pb-24 md:px-6 pt-4 md:pt-6 bg-background">
         <Card>
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2">
             <CardTitle className="text-2xl font-semibold tracking-tight">Leaderboard</CardTitle>
-
+            <CardDescription className="text-sm text-muted-foreground">Reload the leaderboard to see your changes</CardDescription>
+            </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+              <Button 
+                variant="default" 
+                onClick={handleRefresh}
+                disabled={refreshCooldown || isRefreshing}
+                className="relative"
+              >
+                <RefreshCcwIcon className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </Button>
               <Input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
