@@ -38,20 +38,26 @@ type LeaderboardUser = {
 export default function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([])
   const [friendsLeaderboard, setFriendsLeaderboard] = useState<LeaderboardUser[]>([])
+
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isFriendsLoading, setIsFriendsLoading] = useState<boolean>(false)
+
   const [isFiltering, setIsFiltering] = useState<boolean>(false)
   const [query, setQuery] = useState('')
+
   const [sortColumn, setSortColumn] = useState<
     'global_rank' | 'total_solved' | 'easy_solved' | 'medium_solved' | 'hard_solved' | 'streak_count'
   >('global_rank')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [filterSection, setFilterSection] = useState<string | 'all'>('all')
   const [filterSemester, setFilterSemester] = useState<string | 'all'>('all')
+
   const [showFriendsLeaderboard, setShowFriendsLeaderboard] = useState(false)
   const [removingFriendIds, setRemovingFriendIds] = useState<Set<string>>(new Set())
+
   const { role, user: authUser } = useAuth()
   const { get: getCacheValue, set: setCacheValue } = useDataCache()
+
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshCooldown, setRefreshCooldown] = useState(false)
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -491,7 +497,7 @@ export default function Leaderboard() {
                       <th className="py-3 px-3 text-center">Streak</th>
                       <th className="py-3 px-3 text-center">Sem Sec</th>
                       {showFriendsLeaderboard && (
-                        <th className="py-3 px-3 text-center">Action</th>
+                        <th className="py-3 px-3 text-center"></th>
                       )}
                     </tr>
                   </thead>
@@ -561,16 +567,19 @@ export default function Leaderboard() {
                             <td className="py-3 px-3 text-center">
                               {user.user_id !== authUser?.id && (
                                 <Button
-                                  variant="ghost"
+                                  variant="default"
                                   size="sm"
-                                  className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  className="h-8 px-2"
                                   onClick={() => handleRemoveFriend(user.user_id, user.username)}
                                   disabled={removingFriendIds.has(user.user_id)}
                                 >
                                   {removingFriendIds.has(user.user_id) ? (
                                     <Spinner className="h-4 w-4" />
                                   ) : (
-                                    <UserMinus className="h-4 w-4" />
+                                    <>
+                                      <UserMinus className="h-4 w-4 mr-1" /> 
+                                      <span className="text-sm">Remove</span>
+                                    </>
                                   )}
                                 </Button>
                               )}
