@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { UserPlus, Clock, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -28,6 +28,15 @@ export default function FriendRequestsPanel({
   onRefresh,
 }: FriendRequestsPanelProps) {
   const [acceptingIds, setAcceptingIds] = useState<Set<string>>(new Set())
+  const [cancelingIds, setCancelingIds] = useState<Set<string>>(new Set())
+
+  // Local optimistic copy of outgoing requests so we can remove immediately
+  const [localOutgoing, setLocalOutgoing] = useState<FriendRequest[]>(requests.outgoing ?? [])
+
+  // Keep localOutgoing in sync when parent prop changes (e.g., after a refresh)
+  useEffect(() => {
+    setLocalOutgoing(requests.outgoing ?? [])
+  }, [requests.outgoing])
 
   const handleAccept = async (fromUserId: string, username: string) => {
     if (acceptingIds.has(fromUserId)) return
@@ -58,8 +67,44 @@ export default function FriendRequestsPanel({
     }
   }
 
+  const handleCancel = async (friendId: string, username: string) => {
+    if (cancelingIds.has(friendId)) return
+
+    // Optimistically remove from local list and disable button
+    setCancelingIds((prev) => new Set(prev).add(friendId))
+    setLocalOutgoing((prev) => prev.filter((r) => r.user_id !== friendId))
+
+    try {
+      const { error } = await supabase.rpc('cancel_friend_request', {
+        p_target: friendId,
+      })
+
+      if (error) {
+        toast.error('Failed to cancel request', { description: error.message })
+        // Revert optimistic removal by refreshing from server
+        onRefresh()
+        return
+      }
+
+      toast.success(`Cancelled friend request to @${username}`)
+      // Trigger parent refresh so bell/badge stays in sync
+      onRefresh()
+    } catch (err) {
+      console.error('Failed to cancel friend request:', err)
+      toast.error('Failed to cancel request')
+      // Fallback: resync
+      onRefresh()
+    } finally {
+      setCancelingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(friendId)
+        return next
+      })
+    }
+  }
+
   const incoming = requests.incoming ?? []
-  const outgoing = requests.outgoing ?? []
+  const outgoing = localOutgoing
   const hasIncoming = incoming.length > 0
   const hasOutgoing = outgoing.length > 0
   const isEmpty = !hasIncoming && !hasOutgoing
@@ -137,10 +182,25 @@ export default function FriendRequestsPanel({
                     <span className="text-sm font-medium truncate">
                       @{request.username}
                     </span>
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      Pending
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        Pending
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => handleCancel(request.user_id, request.username)}
+                        disabled={cancelingIds.has(request.user_id)}
+                      >
+                        {cancelingIds.has(request.user_id) ? (
+                          <Spinner className="h-3 w-3" />
+                        ) : (
+                          'Cancel'
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
