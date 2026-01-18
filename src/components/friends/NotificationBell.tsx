@@ -19,7 +19,11 @@ type FriendRequestsData = {
   outgoing: FriendRequest[] | null
 }
 
-export default function NotificationBell() {
+type Props = {
+  onRegisterRefresh?: (refreshFn: () => void) => void
+}
+
+export default function NotificationBell({ onRegisterRefresh }: Props) {
   const [isOpen, setIsOpen] = useState(false)
   const [requests, setRequests] = useState<FriendRequestsData>({ incoming: null, outgoing: null })
   const [isLoading, setIsLoading] = useState(false)
@@ -44,6 +48,11 @@ export default function NotificationBell() {
   useEffect(() => {
     fetchRequests()
   }, [fetchRequests])
+
+  // Expose the refresh function to parents if they want to register it
+  useEffect(() => {
+    if (onRegisterRefresh) onRegisterRefresh(fetchRequests)
+  }, [onRegisterRefresh, fetchRequests])
 
 
   const incomingCount = requests.incoming?.length ?? 0

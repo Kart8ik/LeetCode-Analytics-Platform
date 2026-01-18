@@ -55,6 +55,7 @@ export default function Leaderboard() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshCooldown, setRefreshCooldown] = useState(false)
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const notificationRefreshRef = useRef<(() => void) | null>(null)
 
   // Cleanup cooldown timer on unmount
   useEffect(() => {
@@ -63,6 +64,11 @@ export default function Leaderboard() {
         clearTimeout(cooldownTimerRef.current)
       }
     }
+  }, [])
+
+  const handleFriendRequestSent = useCallback(() => {
+    // Trigger NotificationBell to refresh its requests
+    notificationRefreshRef.current?.()
   }, [])
 
   const fetchLeaderboardData = useCallback(async (showToast = true) => {
@@ -325,10 +331,10 @@ export default function Leaderboard() {
 
   return (
     <>
-      <TopNavbar />
+      <TopNavbar onRegisterNotificationRefresh={(fn) => (notificationRefreshRef.current = fn)} />
       <div className="w-full space-y-6 px-4 pb-24 md:px-6 pt-4 md:pt-6 bg-background">
         {/* Friends Search Section */}
-        <AddFriendsCard />
+        <AddFriendsCard onFriendRequestSent={handleFriendRequestSent} />
 
         {/* Leaderboard Card */}
         <Card>

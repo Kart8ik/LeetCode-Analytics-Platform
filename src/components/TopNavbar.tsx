@@ -11,7 +11,11 @@ import { useAuth } from '@/context/AuthContext'
 import ProfileDropdown from '@/components/ProfileDropdown'
 import NotificationBell from '@/components/friends/NotificationBell'
 
-export default function TopNavbar() {
+type Props = {
+  onRegisterNotificationRefresh?: (refreshFn: () => void) => void
+}
+
+export default function TopNavbar({ onRegisterNotificationRefresh }: Props) {
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false)
   const location = useLocation()
   const navigate = useNavigate()
@@ -47,7 +51,7 @@ export default function TopNavbar() {
   const actionButtons = (
     <>
       <div className="flex flex-row items-center gap-2">
-        <NotificationBell />
+        <NotificationBell onRegisterRefresh={onRegisterNotificationRefresh} />
         <ProfileDropdown handleLogout={handleLogout} />
       </div>
     </>

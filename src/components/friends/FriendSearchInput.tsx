@@ -11,7 +11,11 @@ type SearchUser = {
   username: string
 }
 
-export default function FriendSearchInput() {
+type Props = {
+  onRequestSent?: () => void
+}
+
+export default function FriendSearchInput({ onRequestSent }: Props) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchUser[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -79,6 +83,7 @@ export default function FriendSearchInput() {
 
   const handleRequestSent = () => {
     clearSearch()
+    if (onRequestSent) onRequestSent()
   }
 
   return (

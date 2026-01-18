@@ -1,7 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import FriendSearchInput from '@/components/friends/FriendSearchInput'
 
-export default function AddFriendsCard() {
+type Props = {
+  onFriendRequestSent?: () => void
+}
+
+export default function AddFriendsCard({ onFriendRequestSent }: Props) {
   return (
     <Card>
       <CardHeader>
@@ -11,7 +15,7 @@ export default function AddFriendsCard() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <FriendSearchInput />
+        <FriendSearchInput onRequestSent={onFriendRequestSent} />
       </CardContent>
     </Card>
   )
