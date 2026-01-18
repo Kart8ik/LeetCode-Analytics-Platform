@@ -8,6 +8,7 @@ import { DataCacheProvider } from '@/context/DataCacheContext'
 import { Toaster } from '@/components/ui/sonner'
 import { useIsMobile } from '@/hooks/use-mobile';
 import LoadingPage from '@/pages/Loading'
+import { ConfirmProvider } from '@/context/ConfirmContext'
 
 function ProtectedRoute() {
   const { user, loading, session } = useAuth();
@@ -46,12 +47,14 @@ function ToasterWrapper() {
 export default function App() {
   return (
     <BrowserRouter>
-      <DataCacheProvider>
-        <AuthProvider>
-          <ToasterWrapper />
-          <Layout/>
-        </AuthProvider>
-      </DataCacheProvider>
+      <ConfirmProvider>
+        <DataCacheProvider>
+          <AuthProvider>
+            <ToasterWrapper />
+            <Layout/>
+          </AuthProvider>
+        </DataCacheProvider>
+      </ConfirmProvider>
     </BrowserRouter>
   );
 }

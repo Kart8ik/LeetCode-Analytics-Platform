@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -9,7 +9,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select'
-import { Medal, RefreshCcwIcon } from 'lucide-react'
+import { Medal, RefreshCcwIcon, Users, Globe, UserMinus, Search } from 'lucide-react'
 import TopNavbar from '@/components/TopNavbar'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/AuthContext'
@@ -17,6 +17,8 @@ import { useDataCache } from '@/context/DataCacheContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Spinner } from '@/components/ui/spinner'
+import AddFriendsCard from '@/components/friends/AddFriendsCard'
+import { useConfirm } from '@/context/ConfirmContext'
 
 const REFRESH_COOLDOWN_MS = 5000
 
@@ -36,20 +38,32 @@ type LeaderboardUser = {
 
 export default function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([])
+  const [friendsLeaderboard, setFriendsLeaderboard] = useState<LeaderboardUser[]>([])
+
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [isFriendsLoading, setIsFriendsLoading] = useState<boolean>(false)
+
   const [isFiltering, setIsFiltering] = useState<boolean>(false)
   const [query, setQuery] = useState('')
+
   const [sortColumn, setSortColumn] = useState<
     'global_rank' | 'total_solved' | 'easy_solved' | 'medium_solved' | 'hard_solved' | 'streak_count'
   >('global_rank')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [filterSection, setFilterSection] = useState<string | 'all'>('all')
   const [filterSemester, setFilterSemester] = useState<string | 'all'>('all')
-  const { role } = useAuth()
+
+  const [showFriendsLeaderboard, setShowFriendsLeaderboard] = useState(false)
+  const [removingFriendIds, setRemovingFriendIds] = useState<Set<string>>(new Set())
+
+  const { role, user: authUser } = useAuth()
   const { get: getCacheValue, set: setCacheValue } = useDataCache()
+  const confirm = useConfirm()
+
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshCooldown, setRefreshCooldown] = useState(false)
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const notificationRefreshRef = useRef<(() => void) | null>(null)
 
   // Cleanup cooldown timer on unmount
   useEffect(() => {
@@ -58,6 +72,11 @@ export default function Leaderboard() {
         clearTimeout(cooldownTimerRef.current)
       }
     }
+  }, [])
+
+  const handleFriendRequestSent = useCallback(() => {
+    // Trigger NotificationBell to refresh its requests
+    notificationRefreshRef.current?.()
   }, [])
 
   const fetchLeaderboardData = useCallback(async (showToast = true) => {
@@ -82,17 +101,84 @@ export default function Leaderboard() {
     }
   }, [setCacheValue])
 
+  const fetchFriendsLeaderboard = useCallback(async (showToast = false) => {
+    const cacheKey = 'leaderboard:friends'
+    
+    setIsFriendsLoading(true)
+    try {
+      const { data, error } = await supabase.rpc('get_friend_leaderboard_json')
+
+      if (error) {
+        if (showToast) toast.error('Failed to fetch friends', { description: error.message })
+        return false
+      }
+      
+      const list = data || []
+      setFriendsLeaderboard(list)
+      setCacheValue(cacheKey, list)
+      return true
+    } catch {
+      if (showToast) toast.error('Failed to fetch friends leaderboard')
+      return false
+    } finally {
+      setIsFriendsLoading(false)
+    }
+  }, [setCacheValue])
+
+  const handleRemoveFriend = useCallback(async (friendUserId: string, username: string) => {
+    if (removingFriendIds.has(friendUserId)) return
+
+    const confirmed = await confirm({
+      title: 'Remove Friend',
+      description: `Are you sure you want to remove @${username} from friends?`,
+      confirmText: 'Remove Friend',
+      cancelText: 'Keep Friend',
+    })
+    if (!confirmed) return
+
+    setRemovingFriendIds((prev) => new Set(prev).add(friendUserId))
+
+    try {
+      const { error } = await supabase.rpc('remove_friend', {
+        p_friend: friendUserId,
+      })
+
+      if (error) {
+        toast.error('Failed to remove friend', { description: error.message })
+        return
+      }
+
+      toast.success(`Removed @${username} from friends`)
+      // Re-fetch friends leaderboard after removing
+      fetchFriendsLeaderboard(false)
+    } catch (err) {
+      console.error('Failed to remove friend:', err)
+      toast.error('Failed to remove friend')
+    } finally {
+      setRemovingFriendIds((prev) => {
+        const next = new Set(prev)
+        next.delete(friendUserId)
+        return next
+      })
+    }
+  }, [removingFriendIds, fetchFriendsLeaderboard])
+
   const handleRefresh = useCallback(async () => {
     if (refreshCooldown || isRefreshing) return
 
     setIsRefreshing(true)
-    await fetchLeaderboardData(true)
+    if (showFriendsLeaderboard) {
+      await fetchFriendsLeaderboard(true)
+      toast.success('Friends leaderboard refreshed')
+    } else {
+      await fetchLeaderboardData(true)
+    }
     setIsRefreshing(false)
 
     // Start cooldown with cleanup
     setRefreshCooldown(true)
     cooldownTimerRef.current = setTimeout(() => setRefreshCooldown(false), REFRESH_COOLDOWN_MS)
-  }, [refreshCooldown, isRefreshing, fetchLeaderboardData])
+  }, [refreshCooldown, isRefreshing, fetchLeaderboardData, fetchFriendsLeaderboard, showFriendsLeaderboard])
 
   useEffect(() => {
     const cacheKey = 'leaderboard:data'
@@ -132,6 +218,21 @@ export default function Leaderboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Load friends leaderboard when toggle is switched on
+  useEffect(() => {
+    if (!showFriendsLeaderboard) return
+
+    const cacheKey = 'leaderboard:friends'
+    const cached = getCacheValue<LeaderboardUser[] | null>(cacheKey)
+    if (cached !== undefined) {
+      setFriendsLeaderboard(cached ?? [])
+      return
+    }
+
+    fetchFriendsLeaderboard(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showFriendsLeaderboard])
+
   const sections = useMemo(() => {
     return Array.from(new Set(leaderboard.map(u => u.section).filter(Boolean))).sort()
   }, [leaderboard])
@@ -140,10 +241,13 @@ export default function Leaderboard() {
     return Array.from(new Set(leaderboard.map(u => u.semester).filter(Boolean))).sort()
   }, [leaderboard])
 
+  // Use the appropriate data source based on toggle
+  const activeLeaderboard = showFriendsLeaderboard ? friendsLeaderboard : leaderboard
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
 
-    const base = leaderboard.filter(u => {
+    const base = activeLeaderboard.filter(u => {
       const matchesQuery = [u.real_name, u.username, u.section, u.semester]
         .some(val => String(val ?? '').toLowerCase().includes(q))
       const matchesSection = filterSection === 'all' || String(u.section) === String(filterSection)
@@ -169,7 +273,7 @@ export default function Leaderboard() {
     })
 
     return base
-  }, [leaderboard, query, filterSection, filterSemester, sortColumn, sortOrder])
+  }, [activeLeaderboard, query, filterSection, filterSemester, sortColumn, sortOrder])
 
   // Show a quick filtering indicator when query/filters/sort change
   useEffect(() => {
@@ -183,11 +287,11 @@ export default function Leaderboard() {
   // Map of DB rank (position in the fetched leaderboard array)
   const dbRankMap = useMemo(() => {
     const m = new Map<string, number>()
-    leaderboard.forEach((u, i) => {
+    activeLeaderboard.forEach((u, i) => {
       if (u.user_id) m.set(u.user_id, i + 1)
     })
     return m
-  }, [leaderboard])
+  }, [activeLeaderboard])
 
   // Avatar removed — leaderboard shows medal + DB rank in the left column
 
@@ -241,19 +345,42 @@ export default function Leaderboard() {
     URL.revokeObjectURL(url)
   }
 
-
-
   return (
     <>
-      <TopNavbar />
+      <TopNavbar onRegisterNotificationRefresh={(fn) => (notificationRefreshRef.current = fn)} />
       <div className="w-full space-y-6 px-4 pb-24 md:px-6 pt-4 md:pt-6 bg-background">
+        {/* Friends Search Section */}
+        <AddFriendsCard onFriendRequestSent={handleFriendRequestSent} />
+
+        {/* Leaderboard Card */}
         <Card>
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-2">
-            <CardTitle className="text-2xl font-semibold tracking-tight">Leaderboard</CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">Reload the leaderboard to see your changes</CardDescription>
+            <div className="flex flex-col gap-3">
+              <CardTitle className="text-xl font-semibold tracking-tight">Leaderboard</CardTitle>
+              {/* Navbar-style toggle */}
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <div className="flex flex-col max-sm:w-full sm:flex-row gap-3 sm:items-center">
+              <div className="flex flex-row gap-2 justify-between">
+              <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background w-fit">
+                <Button
+                  variant={!showFriendsLeaderboard ? 'default' : 'ghost'}
+                  size="sm"
+                  className="gap-2 rounded-md"
+                  onClick={() => setShowFriendsLeaderboard(false)}
+                >
+                  <Globe className="h-4 w-4" />
+                  Public 
+                </Button>
+                <Button
+                  variant={showFriendsLeaderboard ? 'default' : 'ghost'}
+                  size="sm"
+                  className="gap-2 rounded-md"
+                  onClick={() => setShowFriendsLeaderboard(true)}
+                >
+                  <Users className="h-4 w-4" />
+                  Friends
+                </Button>
+              </div>
               <Button 
                 variant="default" 
                 onClick={handleRefresh}
@@ -262,19 +389,22 @@ export default function Leaderboard() {
               >
                 <RefreshCcwIcon className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </Button>
-              <Input
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Search by name"
-                className="w-full sm:w-64"
-              />
-
-              <div className="flex items-center gap-2">
+              </div>
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder="Search by name..."
+                  className="pl-9"
+                />
+              </div>
+              <div className="flex items-center gap-2 max-sm:w-full">
                 <Select
                   value={sortColumn}
                   onValueChange={(v: string) => setSortColumn(v as typeof sortColumn)}
                 >
-                  <SelectTrigger size="sm" className="w-40">
+                  <SelectTrigger size="sm" className="flex-1 md:w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -288,7 +418,7 @@ export default function Leaderboard() {
                 </Select>
 
                 <Select value={sortOrder} onValueChange={(v: string) => setSortOrder(v as 'asc' | 'desc')}>
-                  <SelectTrigger size="sm" className="w-32">
+                  <SelectTrigger size="sm" className="flex-1 md:w-32">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -345,11 +475,23 @@ export default function Leaderboard() {
           <Separator />
 
           <CardContent className="pt-4 overflow-x-auto rounded-lg relative">
-            {isLoading ? (
+            {(isLoading || (showFriendsLeaderboard && isFriendsLoading)) ? (
               <div className="py-20 flex items-center justify-center">
                 <div className="text-center">
                   <Spinner className="size-10" />
-                  <div className="mt-3 text-sm text-muted-foreground">Loading leaderboard…</div>
+                  <div className="mt-3 text-sm text-muted-foreground">
+                    {showFriendsLeaderboard ? 'Loading friends leaderboard…' : 'Loading leaderboard…'}
+                  </div>
+                </div>
+              </div>
+            ) : showFriendsLeaderboard && (
+              friendsLeaderboard.length === 0 || 
+              (friendsLeaderboard.length === 1 && friendsLeaderboard[0].user_id === authUser?.id)
+            ) ? (
+              <div className="py-20 flex items-center justify-center">
+                <div className="text-center">
+                  <Users className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+                  <div className="text-sm text-muted-foreground">You haven't added any friends yet</div>
                 </div>
               </div>
             ) : (
@@ -364,12 +506,15 @@ export default function Leaderboard() {
                   <thead>
                     <tr className="text-muted-foreground bg-muted/40 text-center">
                       <th className="py-3 px-3 text-left">Rank</th>
-                      <th className="py-3 px-3 text-left sm:w-[50%] w-auto">Leader</th>
+                      <th className="py-3 px-3 text-left sm:w-[40%] w-auto">Leader</th>
                       <th className="py-3 px-3 text-center">Global Rank</th>
                       <th className="py-3 px-3 text-center">E,M,H</th>
                       <th className="py-3 px-3 text-center">Total</th>
                       <th className="py-3 px-3 text-center">Streak</th>
                       <th className="py-3 px-3 text-center">Sem Sec</th>
+                      {showFriendsLeaderboard && (
+                        <th className="py-3 px-3 text-center"></th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -434,6 +579,28 @@ export default function Leaderboard() {
                           <td className="font-semibold">{user.total_solved}</td>
                           <td>{user.streak_count}</td>
                           <td>{semSec}</td>
+                          {showFriendsLeaderboard && (
+                            <td className="py-3 px-3 text-center">
+                              {user.user_id !== authUser?.id && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  className="h-8 px-2"
+                                  onClick={() => handleRemoveFriend(user.user_id, user.username)}
+                                  disabled={removingFriendIds.has(user.user_id)}
+                                >
+                                  {removingFriendIds.has(user.user_id) ? (
+                                    <Spinner className="h-4 w-4" />
+                                  ) : (
+                                    <>
+                                      <UserMinus className="h-4 w-4 mr-1" /> 
+                                      <span className="text-sm">Remove</span>
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </td>
+                          )}
                         </tr>
                       )
                     })}

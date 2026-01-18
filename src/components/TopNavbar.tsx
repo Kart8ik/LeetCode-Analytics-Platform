@@ -9,8 +9,13 @@ import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import ProfileDropdown from '@/components/ProfileDropdown'
+import NotificationBell from '@/components/friends/NotificationBell'
 
-export default function TopNavbar() {
+type Props = {
+  onRegisterNotificationRefresh?: (refreshFn: () => void) => void
+}
+
+export default function TopNavbar({ onRegisterNotificationRefresh }: Props) {
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false)
   const location = useLocation()
   const navigate = useNavigate()
@@ -43,43 +48,34 @@ export default function TopNavbar() {
     }
   }
 
-  const actionButtons = (
-    <>
-      <div className="flex flex-row items-center gap-2">
-        <ProfileDropdown handleLogout={handleLogout} />
-      </div>
-    </>
-  )
-
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="relative flex w-full flex-col gap-4 px-4 py-4 md:px-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start">
-            <div className="flex items-center gap-3">
-              <img
-                src={isDark ? LogoLight : LogoDark}
-                alt="LeetTrack Logo"
-                className="h-10 w-10 rounded-lg md:h-12 md:w-12"
-              />
-              <div>
-                {role === 'admin' && (
-                  <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-                    LeetTrack<span className="text-primary"> Admin</span>
-                  </h1>
-                )}
-                {role === 'user' && <h1 className="text-2xl font-bold tracking-tight md:text-3xl">LeetTrack</h1>}
-                <p className="mt-1 text-sm text-muted-foreground md:text-base hidden sm:block">
-                  Track your coding journey with your friends
-                </p>
-              </div>
+        <div className="flex w-full items-center justify-between gap-4 px-4 py-4 md:px-6">
+          {/* Logo section */}
+          <div className="flex items-center gap-3">
+            <img
+              src={isDark ? LogoLight : LogoDark}
+              alt="LeetTrack Logo"
+              className="h-10 w-10 rounded-lg md:h-12 md:w-12"
+            />
+            <div>
+              {role === 'admin' && (
+                <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+                  LeetTrack<span className="text-primary"> Admin</span>
+                </h1>
+              )}
+              {role === 'user' && <h1 className="text-2xl font-bold tracking-tight md:text-3xl">LeetTrack</h1>}
+              <p className="mt-1 text-sm text-muted-foreground md:text-base hidden sm:block">
+                Track your coding journey with your friends
+              </p>
             </div>
-            <div className="flex items-center gap-3 sm:hidden">{actionButtons}</div>
           </div>
 
+          {/* Center nav - desktop only */}
           {role === 'user' && (
             <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 sm:flex">
-              <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background p-1">
+              <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background">
                 {navItems.map(({ to, label, icon: Icon }) => {
                   const isActive = location.pathname === to
                   return (
@@ -99,14 +95,18 @@ export default function TopNavbar() {
             </div>
           )}
 
-          <div className="hidden items-center gap-3 sm:flex">{actionButtons}</div>
+          {/* Action buttons - single container for all screen sizes */}
+          <div className="flex items-center gap-2">
+            <NotificationBell onRegisterRefresh={onRegisterNotificationRefresh} />
+            <ProfileDropdown handleLogout={handleLogout} />
+          </div>
         </div>
       </header>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:hidden">
         <div className="flex items-center justify-evenly px-4 py-3">
           {role === 'user' && (
-            <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background p-1">
+            <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background">
               {navItems.map(({ to, label, icon: Icon }) => {
                 const isActive = location.pathname === to
                 return (
