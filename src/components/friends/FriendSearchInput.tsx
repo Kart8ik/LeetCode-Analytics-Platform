@@ -4,18 +4,14 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { supabase } from '@/lib/supabase'
-import FriendSearchResults from './FriendSearchResults'
+import FriendSearchResults from '@/components/friends/FriendSearchResults'
 
 type SearchUser = {
   user_id: string
   username: string
 }
 
-type FriendSearchInputProps = {
-  onRequestSent: () => void
-}
-
-export default function FriendSearchInput({ onRequestSent }: FriendSearchInputProps) {
+export default function FriendSearchInput() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchUser[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -83,7 +79,6 @@ export default function FriendSearchInput({ onRequestSent }: FriendSearchInputPr
 
   const handleRequestSent = () => {
     clearSearch()
-    onRequestSent()
   }
 
   return (

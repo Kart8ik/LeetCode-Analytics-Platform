@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { supabase } from '@/lib/supabase'
-import FriendRequestsPanel from './FriendRequestsPanel'
+import FriendRequestsPanel from '@/components/friends/FriendRequestsPanel'
 
 type FriendRequest = {
   user_id: string
@@ -40,12 +40,11 @@ export default function NotificationBell() {
     }
   }, [])
 
-  // Fetch requests when dropdown opens
+  // Fetch requests on mount (so badge count shows immediately)
   useEffect(() => {
-    if (isOpen) {
-      fetchRequests()
-    }
-  }, [isOpen, fetchRequests])
+    fetchRequests()
+  }, [fetchRequests])
+
 
   const incomingCount = requests.incoming?.length ?? 0
 
@@ -67,8 +66,6 @@ export default function NotificationBell() {
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         className="w-80 mr-4 rounded-xl border-border bg-popover p-0 shadow-lg" 
-        align="end"
-        sideOffset={8}
       >
         <FriendRequestsPanel
           requests={requests}

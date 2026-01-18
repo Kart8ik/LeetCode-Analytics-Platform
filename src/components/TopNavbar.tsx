@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import ProfileDropdown from '@/components/ProfileDropdown'
-import { NotificationBell } from '@/components/friends'
+import NotificationBell from '@/components/friends/NotificationBell'
 
 export default function TopNavbar() {
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false)
@@ -81,7 +81,7 @@ export default function TopNavbar() {
 
           {role === 'user' && (
             <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 sm:flex">
-              <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background p-1">
+              <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background">
                 {navItems.map(({ to, label, icon: Icon }) => {
                   const isActive = location.pathname === to
                   return (
@@ -108,7 +108,7 @@ export default function TopNavbar() {
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:hidden">
         <div className="flex items-center justify-evenly px-4 py-3">
           {role === 'user' && (
-            <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background p-1">
+            <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background">
               {navItems.map(({ to, label, icon: Icon }) => {
                 const isActive = location.pathname === to
                 return (

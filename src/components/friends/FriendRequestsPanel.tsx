@@ -69,7 +69,6 @@ export default function FriendRequestsPanel({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <h3 className="text-sm font-semibold text-foreground">Friend Requests</h3>
-        <UserPlus className="h-4 w-4 text-muted-foreground" />
       </div>
 
       <Separator />

@@ -9,7 +9,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select'
-import { Medal, RefreshCcwIcon, Users, Globe, UserMinus } from 'lucide-react'
+import { Medal, RefreshCcwIcon, Users, Globe, UserMinus, Search } from 'lucide-react'
 import TopNavbar from '@/components/TopNavbar'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/AuthContext'
@@ -17,8 +17,7 @@ import { useDataCache } from '@/context/DataCacheContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Spinner } from '@/components/ui/spinner'
-import { Switch } from '@/components/ui/switch'
-import { FriendSearchInput } from '@/components/friends'
+import AddFriendsCard from '@/components/friends/AddFriendsCard'
 
 const REFRESH_COOLDOWN_MS = 5000
 
@@ -51,7 +50,7 @@ export default function Leaderboard() {
   const [filterSemester, setFilterSemester] = useState<string | 'all'>('all')
   const [showFriendsLeaderboard, setShowFriendsLeaderboard] = useState(false)
   const [removingFriendIds, setRemovingFriendIds] = useState<Set<string>>(new Set())
-  const { role } = useAuth()
+  const { role, user: authUser } = useAuth()
   const { get: getCacheValue, set: setCacheValue } = useDataCache()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshCooldown, setRefreshCooldown] = useState(false)
@@ -324,69 +323,42 @@ export default function Leaderboard() {
     URL.revokeObjectURL(url)
   }
 
-
-
-  // Callback when a friend request is sent (to refresh notifications)
-  const handleFriendRequestSent = useCallback(() => {
-    // Optionally refresh friends leaderboard if we're on friends view
-    if (showFriendsLeaderboard) {
-      fetchFriendsLeaderboard(false)
-    }
-  }, [showFriendsLeaderboard, fetchFriendsLeaderboard])
-
   return (
     <>
       <TopNavbar />
       <div className="w-full space-y-6 px-4 pb-24 md:px-6 pt-4 md:pt-6 bg-background">
         {/* Friends Search Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Add Friends</CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">
-              Search for users to send friend requests
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FriendSearchInput onRequestSent={handleFriendRequestSent} />
-          </CardContent>
-        </Card>
+        <AddFriendsCard />
 
         {/* Leaderboard Card */}
         <Card>
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <CardTitle className="text-2xl font-semibold tracking-tight">
-                  {showFriendsLeaderboard ? 'Friends Leaderboard' : 'Leaderboard'}
-                </CardTitle>
-              </div>
-              <CardDescription className="text-sm text-muted-foreground">
-                {showFriendsLeaderboard 
-                  ? 'View your friends\' rankings and stats' 
-                  : 'Reload the leaderboard to see your changes'}
-              </CardDescription>
-              {/* Toggle for Public/Friends */}
-              <div className="flex items-center gap-3 mt-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  <span className={!showFriendsLeaderboard ? 'font-medium' : 'text-muted-foreground'}>
-                    Public
-                  </span>
-                </div>
-                <Switch
-                  checked={showFriendsLeaderboard}
-                  onCheckedChange={setShowFriendsLeaderboard}
-                  aria-label="Toggle friends leaderboard"
-                />
-                <div className="flex items-center gap-2 text-sm">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className={showFriendsLeaderboard ? 'font-medium' : 'text-muted-foreground'}>
-                    Friends
-                  </span>
-                </div>
-              </div>
+            <div className="flex flex-col gap-3">
+              <CardTitle className="text-xl font-semibold tracking-tight">Leaderboard</CardTitle>
+              {/* Navbar-style toggle */}
             </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+              <div className="flex flex-row gap-2 justify-between">
+              <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background w-fit">
+                <Button
+                  variant={!showFriendsLeaderboard ? 'default' : 'ghost'}
+                  size="sm"
+                  className="gap-2 rounded-md"
+                  onClick={() => setShowFriendsLeaderboard(false)}
+                >
+                  <Globe className="h-4 w-4" />
+                  Public 
+                </Button>
+                <Button
+                  variant={showFriendsLeaderboard ? 'default' : 'ghost'}
+                  size="sm"
+                  className="gap-2 rounded-md"
+                  onClick={() => setShowFriendsLeaderboard(true)}
+                >
+                  <Users className="h-4 w-4" />
+                  Friends
+                </Button>
+              </div>
               <Button 
                 variant="default" 
                 onClick={handleRefresh}
@@ -395,13 +367,16 @@ export default function Leaderboard() {
               >
                 <RefreshCcwIcon className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </Button>
-              <Input
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Search by name"
-                className="w-full sm:w-64"
-              />
-
+              </div>
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder="Search by name..."
+                  className="pl-9"
+                />
+              </div>
               <div className="flex items-center gap-2">
                 <Select
                   value={sortColumn}
@@ -487,12 +462,14 @@ export default function Leaderboard() {
                   </div>
                 </div>
               </div>
-            ) : showFriendsLeaderboard && friendsLeaderboard.length === 0 ? (
+            ) : showFriendsLeaderboard && (
+              friendsLeaderboard.length === 0 || 
+              (friendsLeaderboard.length === 1 && friendsLeaderboard[0].user_id === authUser?.id)
+            ) ? (
               <div className="py-20 flex items-center justify-center">
                 <div className="text-center">
                   <Users className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
                   <div className="text-sm text-muted-foreground">You haven't added any friends yet</div>
-                  <div className="text-xs text-muted-foreground mt-1">Use the search above to find and add friends</div>
                 </div>
               </div>
             ) : (
@@ -582,19 +559,21 @@ export default function Leaderboard() {
                           <td>{semSec}</td>
                           {showFriendsLeaderboard && (
                             <td className="py-3 px-3 text-center">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => handleRemoveFriend(user.user_id, user.username)}
-                                disabled={removingFriendIds.has(user.user_id)}
-                              >
-                                {removingFriendIds.has(user.user_id) ? (
-                                  <Spinner className="h-4 w-4" />
-                                ) : (
-                                  <UserMinus className="h-4 w-4" />
-                                )}
-                              </Button>
+                              {user.user_id !== authUser?.id && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => handleRemoveFriend(user.user_id, user.username)}
+                                  disabled={removingFriendIds.has(user.user_id)}
+                                >
+                                  {removingFriendIds.has(user.user_id) ? (
+                                    <Spinner className="h-4 w-4" />
+                                  ) : (
+                                    <UserMinus className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              )}
                             </td>
                           )}
                         </tr>
