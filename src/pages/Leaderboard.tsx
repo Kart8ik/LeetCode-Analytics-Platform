@@ -9,7 +9,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select'
-import { Medal, RefreshCcwIcon } from 'lucide-react'
+import { Medal, RefreshCcwIcon, Users, Globe, UserMinus } from 'lucide-react'
 import TopNavbar from '@/components/TopNavbar'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/AuthContext'
@@ -17,6 +17,8 @@ import { useDataCache } from '@/context/DataCacheContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Spinner } from '@/components/ui/spinner'
+import { Switch } from '@/components/ui/switch'
+import { FriendSearchInput } from '@/components/friends'
 
 const REFRESH_COOLDOWN_MS = 5000
 
@@ -36,7 +38,9 @@ type LeaderboardUser = {
 
 export default function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([])
+  const [friendsLeaderboard, setFriendsLeaderboard] = useState<LeaderboardUser[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [isFriendsLoading, setIsFriendsLoading] = useState<boolean>(false)
   const [isFiltering, setIsFiltering] = useState<boolean>(false)
   const [query, setQuery] = useState('')
   const [sortColumn, setSortColumn] = useState<
@@ -45,6 +49,8 @@ export default function Leaderboard() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [filterSection, setFilterSection] = useState<string | 'all'>('all')
   const [filterSemester, setFilterSemester] = useState<string | 'all'>('all')
+  const [showFriendsLeaderboard, setShowFriendsLeaderboard] = useState(false)
+  const [removingFriendIds, setRemovingFriendIds] = useState<Set<string>>(new Set())
   const { role } = useAuth()
   const { get: getCacheValue, set: setCacheValue } = useDataCache()
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -82,17 +88,76 @@ export default function Leaderboard() {
     }
   }, [setCacheValue])
 
+  const fetchFriendsLeaderboard = useCallback(async (showToast = false) => {
+    const cacheKey = 'leaderboard:friends'
+    
+    setIsFriendsLoading(true)
+    try {
+      const { data, error } = await supabase.rpc('get_friend_leaderboard_json')
+
+      if (error) {
+        if (showToast) toast.error('Failed to fetch friends', { description: error.message })
+        return false
+      }
+      
+      const list = data || []
+      setFriendsLeaderboard(list)
+      setCacheValue(cacheKey, list)
+      return true
+    } catch {
+      if (showToast) toast.error('Failed to fetch friends leaderboard')
+      return false
+    } finally {
+      setIsFriendsLoading(false)
+    }
+  }, [setCacheValue])
+
+  const handleRemoveFriend = useCallback(async (friendUserId: string, username: string) => {
+    if (removingFriendIds.has(friendUserId)) return
+
+    setRemovingFriendIds((prev) => new Set(prev).add(friendUserId))
+
+    try {
+      const { error } = await supabase.rpc('remove_friend', {
+        p_friend: friendUserId,
+      })
+
+      if (error) {
+        toast.error('Failed to remove friend', { description: error.message })
+        return
+      }
+
+      toast.success(`Removed @${username} from friends`)
+      // Re-fetch friends leaderboard after removing
+      fetchFriendsLeaderboard(false)
+    } catch (err) {
+      console.error('Failed to remove friend:', err)
+      toast.error('Failed to remove friend')
+    } finally {
+      setRemovingFriendIds((prev) => {
+        const next = new Set(prev)
+        next.delete(friendUserId)
+        return next
+      })
+    }
+  }, [removingFriendIds, fetchFriendsLeaderboard])
+
   const handleRefresh = useCallback(async () => {
     if (refreshCooldown || isRefreshing) return
 
     setIsRefreshing(true)
-    await fetchLeaderboardData(true)
+    if (showFriendsLeaderboard) {
+      await fetchFriendsLeaderboard(true)
+      toast.success('Friends leaderboard refreshed')
+    } else {
+      await fetchLeaderboardData(true)
+    }
     setIsRefreshing(false)
 
     // Start cooldown with cleanup
     setRefreshCooldown(true)
     cooldownTimerRef.current = setTimeout(() => setRefreshCooldown(false), REFRESH_COOLDOWN_MS)
-  }, [refreshCooldown, isRefreshing, fetchLeaderboardData])
+  }, [refreshCooldown, isRefreshing, fetchLeaderboardData, fetchFriendsLeaderboard, showFriendsLeaderboard])
 
   useEffect(() => {
     const cacheKey = 'leaderboard:data'
@@ -132,6 +197,21 @@ export default function Leaderboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Load friends leaderboard when toggle is switched on
+  useEffect(() => {
+    if (!showFriendsLeaderboard) return
+
+    const cacheKey = 'leaderboard:friends'
+    const cached = getCacheValue<LeaderboardUser[] | null>(cacheKey)
+    if (cached !== undefined) {
+      setFriendsLeaderboard(cached ?? [])
+      return
+    }
+
+    fetchFriendsLeaderboard(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showFriendsLeaderboard])
+
   const sections = useMemo(() => {
     return Array.from(new Set(leaderboard.map(u => u.section).filter(Boolean))).sort()
   }, [leaderboard])
@@ -140,10 +220,13 @@ export default function Leaderboard() {
     return Array.from(new Set(leaderboard.map(u => u.semester).filter(Boolean))).sort()
   }, [leaderboard])
 
+  // Use the appropriate data source based on toggle
+  const activeLeaderboard = showFriendsLeaderboard ? friendsLeaderboard : leaderboard
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
 
-    const base = leaderboard.filter(u => {
+    const base = activeLeaderboard.filter(u => {
       const matchesQuery = [u.real_name, u.username, u.section, u.semester]
         .some(val => String(val ?? '').toLowerCase().includes(q))
       const matchesSection = filterSection === 'all' || String(u.section) === String(filterSection)
@@ -169,7 +252,7 @@ export default function Leaderboard() {
     })
 
     return base
-  }, [leaderboard, query, filterSection, filterSemester, sortColumn, sortOrder])
+  }, [activeLeaderboard, query, filterSection, filterSemester, sortColumn, sortOrder])
 
   // Show a quick filtering indicator when query/filters/sort change
   useEffect(() => {
@@ -183,11 +266,11 @@ export default function Leaderboard() {
   // Map of DB rank (position in the fetched leaderboard array)
   const dbRankMap = useMemo(() => {
     const m = new Map<string, number>()
-    leaderboard.forEach((u, i) => {
+    activeLeaderboard.forEach((u, i) => {
       if (u.user_id) m.set(u.user_id, i + 1)
     })
     return m
-  }, [leaderboard])
+  }, [activeLeaderboard])
 
   // Avatar removed — leaderboard shows medal + DB rank in the left column
 
@@ -243,15 +326,65 @@ export default function Leaderboard() {
 
 
 
+  // Callback when a friend request is sent (to refresh notifications)
+  const handleFriendRequestSent = useCallback(() => {
+    // Optionally refresh friends leaderboard if we're on friends view
+    if (showFriendsLeaderboard) {
+      fetchFriendsLeaderboard(false)
+    }
+  }, [showFriendsLeaderboard, fetchFriendsLeaderboard])
+
   return (
     <>
       <TopNavbar />
       <div className="w-full space-y-6 px-4 pb-24 md:px-6 pt-4 md:pt-6 bg-background">
+        {/* Friends Search Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">Add Friends</CardTitle>
+            <CardDescription className="text-sm text-muted-foreground">
+              Search for users to send friend requests
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FriendSearchInput onRequestSent={handleFriendRequestSent} />
+          </CardContent>
+        </Card>
+
+        {/* Leaderboard Card */}
         <Card>
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-2">
-            <CardTitle className="text-2xl font-semibold tracking-tight">Leaderboard</CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">Reload the leaderboard to see your changes</CardDescription>
+              <div className="flex items-center gap-3">
+                <CardTitle className="text-2xl font-semibold tracking-tight">
+                  {showFriendsLeaderboard ? 'Friends Leaderboard' : 'Leaderboard'}
+                </CardTitle>
+              </div>
+              <CardDescription className="text-sm text-muted-foreground">
+                {showFriendsLeaderboard 
+                  ? 'View your friends\' rankings and stats' 
+                  : 'Reload the leaderboard to see your changes'}
+              </CardDescription>
+              {/* Toggle for Public/Friends */}
+              <div className="flex items-center gap-3 mt-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  <span className={!showFriendsLeaderboard ? 'font-medium' : 'text-muted-foreground'}>
+                    Public
+                  </span>
+                </div>
+                <Switch
+                  checked={showFriendsLeaderboard}
+                  onCheckedChange={setShowFriendsLeaderboard}
+                  aria-label="Toggle friends leaderboard"
+                />
+                <div className="flex items-center gap-2 text-sm">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className={showFriendsLeaderboard ? 'font-medium' : 'text-muted-foreground'}>
+                    Friends
+                  </span>
+                </div>
+              </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <Button 
@@ -345,11 +478,21 @@ export default function Leaderboard() {
           <Separator />
 
           <CardContent className="pt-4 overflow-x-auto rounded-lg relative">
-            {isLoading ? (
+            {(isLoading || (showFriendsLeaderboard && isFriendsLoading)) ? (
               <div className="py-20 flex items-center justify-center">
                 <div className="text-center">
                   <Spinner className="size-10" />
-                  <div className="mt-3 text-sm text-muted-foreground">Loading leaderboard…</div>
+                  <div className="mt-3 text-sm text-muted-foreground">
+                    {showFriendsLeaderboard ? 'Loading friends leaderboard…' : 'Loading leaderboard…'}
+                  </div>
+                </div>
+              </div>
+            ) : showFriendsLeaderboard && friendsLeaderboard.length === 0 ? (
+              <div className="py-20 flex items-center justify-center">
+                <div className="text-center">
+                  <Users className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+                  <div className="text-sm text-muted-foreground">You haven't added any friends yet</div>
+                  <div className="text-xs text-muted-foreground mt-1">Use the search above to find and add friends</div>
                 </div>
               </div>
             ) : (
@@ -364,12 +507,15 @@ export default function Leaderboard() {
                   <thead>
                     <tr className="text-muted-foreground bg-muted/40 text-center">
                       <th className="py-3 px-3 text-left">Rank</th>
-                      <th className="py-3 px-3 text-left sm:w-[50%] w-auto">Leader</th>
+                      <th className="py-3 px-3 text-left sm:w-[40%] w-auto">Leader</th>
                       <th className="py-3 px-3 text-center">Global Rank</th>
                       <th className="py-3 px-3 text-center">E,M,H</th>
                       <th className="py-3 px-3 text-center">Total</th>
                       <th className="py-3 px-3 text-center">Streak</th>
                       <th className="py-3 px-3 text-center">Sem Sec</th>
+                      {showFriendsLeaderboard && (
+                        <th className="py-3 px-3 text-center">Action</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -434,6 +580,23 @@ export default function Leaderboard() {
                           <td className="font-semibold">{user.total_solved}</td>
                           <td>{user.streak_count}</td>
                           <td>{semSec}</td>
+                          {showFriendsLeaderboard && (
+                            <td className="py-3 px-3 text-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleRemoveFriend(user.user_id, user.username)}
+                                disabled={removingFriendIds.has(user.user_id)}
+                              >
+                                {removingFriendIds.has(user.user_id) ? (
+                                  <Spinner className="h-4 w-4" />
+                                ) : (
+                                  <UserMinus className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </td>
+                          )}
                         </tr>
                       )
                     })}

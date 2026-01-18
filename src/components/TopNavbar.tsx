@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import ProfileDropdown from '@/components/ProfileDropdown'
+import { NotificationBell } from '@/components/friends'
 
 export default function TopNavbar() {
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false)
@@ -46,6 +47,7 @@ export default function TopNavbar() {
   const actionButtons = (
     <>
       <div className="flex flex-row items-center gap-2">
+        <NotificationBell />
         <ProfileDropdown handleLogout={handleLogout} />
       </div>
     </>
