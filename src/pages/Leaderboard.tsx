@@ -18,6 +18,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Spinner } from '@/components/ui/spinner'
 import AddFriendsCard from '@/components/friends/AddFriendsCard'
+import { useConfirm } from '@/context/ConfirmContext'
 
 const REFRESH_COOLDOWN_MS = 5000
 
@@ -57,6 +58,7 @@ export default function Leaderboard() {
 
   const { role, user: authUser } = useAuth()
   const { get: getCacheValue, set: setCacheValue } = useDataCache()
+  const confirm = useConfirm()
 
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshCooldown, setRefreshCooldown] = useState(false)
@@ -125,6 +127,14 @@ export default function Leaderboard() {
 
   const handleRemoveFriend = useCallback(async (friendUserId: string, username: string) => {
     if (removingFriendIds.has(friendUserId)) return
+
+    const confirmed = await confirm({
+      title: 'Remove Friend',
+      description: `Are you sure you want to remove @${username} from friends?`,
+      confirmText: 'Remove Friend',
+      cancelText: 'Keep Friend',
+    })
+    if (!confirmed) return
 
     setRemovingFriendIds((prev) => new Set(prev).add(friendUserId))
 
@@ -349,7 +359,7 @@ export default function Leaderboard() {
               <CardTitle className="text-xl font-semibold tracking-tight">Leaderboard</CardTitle>
               {/* Navbar-style toggle */}
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <div className="flex flex-col max-sm:w-full sm:flex-row gap-3 sm:items-center">
               <div className="flex flex-row gap-2 justify-between">
               <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background w-fit">
                 <Button
@@ -389,12 +399,12 @@ export default function Leaderboard() {
                   className="pl-9"
                 />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 max-sm:w-full">
                 <Select
                   value={sortColumn}
                   onValueChange={(v: string) => setSortColumn(v as typeof sortColumn)}
                 >
-                  <SelectTrigger size="sm" className="w-40">
+                  <SelectTrigger size="sm" className="flex-1 md:w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -408,7 +418,7 @@ export default function Leaderboard() {
                 </Select>
 
                 <Select value={sortOrder} onValueChange={(v: string) => setSortOrder(v as 'asc' | 'desc')}>
-                  <SelectTrigger size="sm" className="w-32">
+                  <SelectTrigger size="sm" className="flex-1 md:w-32">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

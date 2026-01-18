@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import { useConfirm } from '@/context/ConfirmContext'
 
 type SearchUser = {
   user_id: string
@@ -21,10 +22,16 @@ export default function FriendSearchResults({
 }: FriendSearchResultsProps) {
   const [sendingIds, setSendingIds] = useState<Set<string>>(new Set())
   const [sentIds, setSentIds] = useState<Set<string>>(new Set())
-
+  const confirm = useConfirm()
   const handleSendRequest = async (targetUserId: string, username: string) => {
     if (sendingIds.has(targetUserId) || sentIds.has(targetUserId)) return
-
+    const confirmed = await confirm({
+      title: 'Send Friend Request',
+      description: `Are you sure you want to send a friend request to @${username}?`,
+      confirmText: 'Send Request',
+      cancelText: 'Cancel',
+    })
+    if (!confirmed) return
     setSendingIds((prev) => new Set(prev).add(targetUserId))
 
     try {

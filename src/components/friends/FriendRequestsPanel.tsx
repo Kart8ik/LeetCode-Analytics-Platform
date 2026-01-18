@@ -5,6 +5,7 @@ import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import { useConfirm } from '@/context/ConfirmContext'
 
 type FriendRequest = {
   user_id: string
@@ -29,7 +30,7 @@ export default function FriendRequestsPanel({
 }: FriendRequestsPanelProps) {
   const [acceptingIds, setAcceptingIds] = useState<Set<string>>(new Set())
   const [cancelingIds, setCancelingIds] = useState<Set<string>>(new Set())
-
+  const confirm = useConfirm()
   // Local optimistic copy of outgoing requests so we can remove immediately
   const [localOutgoing, setLocalOutgoing] = useState<FriendRequest[]>(requests.outgoing ?? [])
 
@@ -69,6 +70,14 @@ export default function FriendRequestsPanel({
 
   const handleCancel = async (friendId: string, username: string) => {
     if (cancelingIds.has(friendId)) return
+    
+    const confirmed = await confirm({
+      title: 'Cancel Friend Request',
+      description: `Are you sure you want to cancel the friend request to @${username}?`,
+      confirmText: 'Cancel Request',
+      cancelText: 'Keep Request',
+    })
+    if (!confirmed) return
 
     // Optimistically remove from local list and disable button
     setCancelingIds((prev) => new Set(prev).add(friendId))
@@ -183,13 +192,13 @@ export default function FriendRequestsPanel({
                       @{request.username}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground mr-2">
                         <Clock className="h-3 w-3" />
                         Pending
                       </span>
                       <Button
                         size="sm"
-                        variant="ghost"
+                        variant="default"
                         className="h-7 px-2 text-xs"
                         onClick={() => handleCancel(request.user_id, request.username)}
                         disabled={cancelingIds.has(request.user_id)}
