@@ -22,9 +22,14 @@ export default function HeroSection() {
               <Link to="/dashboard">Go to Dashboard</Link>
             </Button>
           ) : (
+            <>
+            <Button asChild size="lg" className="text-lg px-8 py-6 mr-6">
+              <Link to="/login">Login</Link>
+            </Button>
             <Button asChild size="lg" className="text-lg px-8 py-6">
               <Link to="/signup">Sign Up</Link>
             </Button>
+            </>
           )}
         </div>
       </div>

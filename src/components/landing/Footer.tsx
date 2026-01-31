@@ -3,16 +3,16 @@ import { Link } from 'react-router-dom'
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border bg-background py-8 px-4 md:px-6">
+    <footer className="z-50 border-t border-border bg-background py-8 px-4 md:px-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-sm text-muted-foreground">
-            © 2026 LeetTrack. All rights reserved.
+            © 2026 LeetTrack
           </div>
           
           <div className="flex items-center gap-6">
             <a
-              href="https://github.com"
+              href="https://github.com/kart8ik/LeetCode-Analytics-Platform"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"

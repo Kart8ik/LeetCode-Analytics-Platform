@@ -25,10 +25,26 @@ function ProtectedRoute() {
   return <Outlet />;
 }
 
+function RootRoute() {
+  const { user, loading, session } = useAuth();
+
+  if (loading) {
+    return <LoadingPage />;
+  }
+
+  // If authenticated, redirect to dashboard
+  if (user && session) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // If not authenticated, show landing page
+  return <Landing />;
+}
+
 function Layout() {
   return (
         <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<RootRoute />} />
           <Route path="/loading" element={<LoadingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />

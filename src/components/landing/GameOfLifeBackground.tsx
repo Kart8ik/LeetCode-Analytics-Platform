@@ -32,7 +32,7 @@ export default function GameOfLifeBackground() {
       for (let y = 0; y < gridHeightRef.current; y++) {
         grid[y] = []
         for (let x = 0; x < gridWidthRef.current; x++) {
-          grid[y][x] = Math.random() < 0.50
+          grid[y][x] = Math.random() < 0.35
         }
       }
       return grid
@@ -147,7 +147,7 @@ export default function GameOfLifeBackground() {
       style={{ 
         width: '100vw',
         height: '100vh',
-        opacity: 0.25,
+        opacity: 0.45,
       }}
       aria-hidden="true"
     />

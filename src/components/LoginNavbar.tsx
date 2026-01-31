@@ -2,7 +2,7 @@ import LogoLight from '@/assets/images/icons/logo-icon-whitebg1.png'
 import LogoDark from '@/assets/images/icons/logo-icon-blackbg.png'
 import ThemeToggle from './ThemeToggle'
 import { useAuth } from '@/context/AuthContext'
-
+import { Link } from 'react-router-dom'
 export default function LoginNavbar() {
   const { isDark } = useAuth()
 
@@ -16,7 +16,9 @@ export default function LoginNavbar() {
             className="h-10 w-10 md:h-12 md:w-12 rounded-lg"
           />
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">LeetTrack</h1>
+            <Link to="/">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">LeetTrack</h1>
+            </Link>
             <p className="text-muted-foreground mt-1 text-sm md:text-base hidden sm:block">
               Track your coding journey with your friends
             </p>
