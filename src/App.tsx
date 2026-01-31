@@ -3,6 +3,7 @@ import Dashboard from '@/pages/Dashboard'
 import Leaderboard from '@/pages/Leaderboard'
 import Login from '@/pages/Login'
 import SignUp from '@/pages/SignUp'
+import Landing from '@/pages/Landing'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { DataCacheProvider } from '@/context/DataCacheContext'
 import { Toaster } from '@/components/ui/sonner'
@@ -27,6 +28,7 @@ function ProtectedRoute() {
 function Layout() {
   return (
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/loading" element={<LoadingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
@@ -34,7 +36,6 @@ function Layout() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
           </Route>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
   )
 }
