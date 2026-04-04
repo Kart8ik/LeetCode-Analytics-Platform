@@ -1,15 +1,18 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 import time
 import json
 import requests
+import re
 from typing import Any, Dict, List, Optional
 from supabase import create_client, Client
 
-
-load_dotenv()
+_SCRIPT_DIR = Path(__file__).resolve().parent
+load_dotenv(_SCRIPT_DIR / ".env")
 
 URL = "https://leetcode.com/graphql"
+
 HEADERS = {
     "Content-Type": "application/json",
     "Referer": "https://leetcode.com",
@@ -21,13 +24,15 @@ if LEETCODE_SESSION:
     HEADERS["Cookie"] = f"LEETCODE_SESSION={LEETCODE_SESSION}"
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-REQUEST_DELAY = 0.4
+REQUEST_DELAY = 0.6
 MAX_RETRIES = 3
+USERNAME_REGEX = r"^[a-zA-Z0-9_]{3,24}$"
 
-# --- Queries ---
+# ------------------ QUERIES ------------------
 
 # --- Main combined query (covers most data) ---
 Q_fullUserData = """
@@ -141,202 +146,190 @@ query userProfileCalendar($username: String!, $year: Int) {
 }
 """
 
+# ------------------ HELPERS ------------------
+
 def graphql_request(query: str, variables: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     payload = {"query": query, "variables": variables or {}}
+
     for attempt in range(MAX_RETRIES):
         try:
             r = requests.post(URL, json=payload, headers=HEADERS, timeout=20)
             if r.status_code == 200:
                 return r.json()
-            print(f"[WARN] HTTP {r.status_code}: {r.text[:200]}")
-        except Exception as e:
-            print("[WARN] request error:", e)
-        time.sleep(0.6 + 0.3 * attempt)
+        except Exception:
+            pass
+
+        time.sleep(0.8 + 0.4 * attempt)
+
     return {}
 
-def get_count_by_label(arr: Optional[List[Dict[str, Any]]], label: str) -> int:
+def get_count(arr, label):
     if not arr:
         return 0
+
     label = label.lower()
-    for item in arr:
-        d = (item.get("difficulty") or "").lower()
-        if label == "all" and (d == "all" or d == ""):
-            return int(item.get("count") or item.get("submissions") or 0)
+
+    for i in arr:
+        d = (i.get("difficulty") or "").lower()
         if label in d:
-            return int(item.get("count") or item.get("submissions") or 0)
+            return int(i.get("count") or i.get("submissions") or 0)
+
     if label == "all":
         return sum(int(i.get("count") or i.get("submissions") or 0) for i in arr)
+
     return 0
 
-def safe_json_dumps(obj: Any) -> str:
+def safe_json(obj):
     try:
         return json.dumps(obj, ensure_ascii=False)
-    except Exception:
-        return json.dumps(str(obj))
+    except:
+        return "[]"
 
-def upsert_to_supabase(user_id: str, row: Dict[str, Any]):
-    """Push data into all tables for one user."""
-    # users
-    supabase.table("users").update({
-        "global_rank": row.get("rank"),
-        "updated_at": "now()"
-    }).eq("user_id", user_id).execute()
-
-    # problem_stats
-    supabase.table("problem_stats").upsert({
-        "user_id": user_id,
-        "easy_solved": row.get("easy_solved"),
-        "medium_solved": row.get("medium_solved"),
-        "hard_solved": row.get("hard_solved"),
-        "acceptance_rate": row.get("acceptance_rate_percent"),
-        "total_solved": row.get("total_solved")
-    }).execute()
-
-    # progress_stats
-    supabase.table("progress_stats").upsert({
-        "user_id": user_id,
-        "streak_count": row.get("streak_count"),
-        "badge_count": row.get("badge_count"),
-        "submission_calendar_json": row.get("submission_calendar_json"),
-        "recent_submissions": row.get("recent_submissions_json"),
-        "total_active_days": row.get("total_active_days")
-    }).execute()
-
-    # language_stats
-    try:
-        langs = json.loads(row.get("language_stats_json") or "[]")
-        for l in langs:
-            supabase.table("language_stats").upsert({
-                "user_id": user_id,
-                "language_name": l["languageName"],
-                "problems_solved": l["problemsSolved"]
-            }).execute()
-    except Exception as e:
-        print(f"[WARN] language_stats failed for {user_id}: {e}")
-
-    # topic_stats
-    try:
-        topics = json.loads(row.get("topic_stats_json") or "[]")
-        for t in topics:
-            supabase.table("topic_stats").upsert({
-                "user_id": user_id,
-                "tag_name": t["tag_name"],
-                "difficulty_level": t["difficulty_level"],
-                "problems_solved": t["problems_solved"]
-            }).execute()
-    except Exception as e:
-        print(f"[WARN] topic_stats failed for {user_id}: {e}")
-
+# ------------------ MAIN ------------------
 
 def fetch_and_push():
-    # Get users from Supabase
-    res = supabase.table("users").select("user_id, username").execute()
-    if not res.data:
-        print("No users found in Supabase.")
-        return
-    users = res.data
+    res = (
+        supabase
+        .table("users")
+        .select("user_id, username")
+        .not_.is_("username", "null")
+        .execute()
+    )
 
-    print(f"Fetched {len(users)} users from Supabase.\n")
+    users = res.data or []
+    print(f"Fetched {len(users)} users\n")
 
-    # Loop through users
     for u in users:
-        user_id, uname = u["user_id"], u["username"]
-        print(f"Fetching: {uname}")
-        row = {"username": uname}
+        user_id = u["user_id"]
+        uname = (u.get("username") or "").strip()
+
+        # -------- SKIP INVALID --------
+        if not uname:
+            print(f"[SKIP] Empty username: {user_id}")
+            continue
+
+        if not re.match(USERNAME_REGEX, uname):
+            print(f"[SKIP] Invalid username: {uname}")
+            continue
+
+        print(f"[FETCH] {uname}")
 
         try:
-            # --- Try full query first ---
-            res = graphql_request(Q_fullUserData, {"username": uname, "limit": 15, "year": None})
+            # -------- FULL QUERY --------
+            res = graphql_request(Q_fullUserData, {
+                "username": uname,
+                "limit": 15,
+                "year": None
+            })
+
             data = res.get("data", {})
             user = data.get("matchedUser")
 
-            # --- FALLBACK if full query fails ---
+            # -------- FALLBACK --------
             if not user:
-                print(f"[WARN] Full query failed for {uname}, fetching partial data...")
+                print(f"[WARN] Full query failed → fallback for {uname}")
 
                 user = {}
-                # Run fallback queries individually to gather partial info
-                for qname, query in [
-                    ("profile", Q_userPublicProfile),
-                    ("submitStats", Q_userSessionProgress),
-                    ("tagProblemCounts", Q_skillStats),
-                    ("languageProblemCount", Q_languageStats),
-                    ("badges", Q_userBadges),
-                    ("userCalendar", Q_userProfileCalendar)
+
+                for query in [
+                    Q_userPublicProfile,
+                    Q_userSessionProgress,
+                    Q_skillStats,
+                    Q_languageStats,
+                    Q_userBadges,
+                    Q_userProfileCalendar
                 ]:
-                    try:
-                        partial = graphql_request(query, {"username": uname})
-                        matched = partial.get("data", {}).get("matchedUser")
-                        if matched:
-                            user.update(matched)
-                    except Exception as e:
-                        print(f"[WARN] Fallback query {qname} failed for {uname}: {e}")
+                    partial = graphql_request(query, {"username": uname})
+                    matched = partial.get("data", {}).get("matchedUser")
+
+                    if matched:
+                        user.update(matched)
+
                     time.sleep(0.25)
 
-                # Fallback won't fetch recent submissions
                 data["recentAcSubmissionList"] = []
 
-            # --- Parse data (same logic for both full and fallback) ---
-            prof = user.get("profile") or {}
-            row["real_name"] = prof.get("realName")
-            row["rank"] = prof.get("ranking")
+            if not user:
+                print(f"[SKIP] No valid data for {uname}\n")
+                continue
 
-            # Problem stats
+            # -------- PARSE --------
+            prof = user.get("profile") or {}
             submit = user.get("submitStats") or {}
+
             ac = submit.get("acSubmissionNum") or []
             tot = submit.get("totalSubmissionNum") or []
-            row["easy_solved"] = get_count_by_label(ac, "easy")
-            row["medium_solved"] = get_count_by_label(ac, "medium")
-            row["hard_solved"] = get_count_by_label(ac, "hard")
-            total_ac = get_count_by_label(ac, "all")
-            total_total = get_count_by_label(tot, "all")
-            row["total_solved"] = total_ac
-            row["acceptance_rate_percent"] = (
-                round((total_ac / total_total) * 100.0, 2) if total_total else None
-            )
 
-            # Language stats
-            langs = user.get("languageProblemCount") or []
-            row["language_stats_json"] = safe_json_dumps(langs)
+            total_ac = get_count(ac, "all")
+            total_total = get_count(tot, "all")
 
-            # Topic stats
-            tags = user.get("tagProblemCounts") or {}
-            topics = []
-            for lvl in ("advanced", "intermediate", "fundamental"):
-                for it in tags.get(lvl) or []:
-                    topics.append({
-                        "tag_name": it.get("tagName"),
-                        "difficulty_level": lvl,
-                        "problems_solved": int(it.get("problemsSolved") or 0)
-                    })
-            row["topic_stats_json"] = safe_json_dumps(topics)
+            # -------- USERS UPDATE --------
+            if prof.get("ranking") is not None:
+                supabase.table("users").update({
+                    "global_rank": prof.get("ranking")
+                }).eq("user_id", user_id).execute()
 
-            # Badges
-            badges = user.get("badges") or []
-            row["badge_count"] = len(badges)
+            # -------- PROBLEM STATS --------
+            supabase.table("problem_stats").upsert({
+                "user_id": user_id,
+                "easy_solved": get_count(ac, "easy"),
+                "medium_solved": get_count(ac, "medium"),
+                "hard_solved": get_count(ac, "hard"),
+                "total_solved": total_ac,
+                "acceptance_rate": (
+                    round((total_ac / total_total) * 100, 2)
+                    if total_total else None
+                )
+            }).execute()
 
-            # Calendar
+            # -------- PROGRESS --------
             cal = user.get("userCalendar") or {}
-            row["streak_count"] = cal.get("streak")
-            row["total_active_days"] = cal.get("totalActiveDays")
-            row["submission_calendar_json"] = safe_json_dumps(cal.get("submissionCalendar"))
 
-            # Recent submissions (if full query succeeded)
-            row["recent_submissions_json"] = safe_json_dumps(
-                data.get("recentAcSubmissionList") or []
-            )
+            supabase.table("progress_stats").upsert({
+                "user_id": user_id,
+                "streak_count": cal.get("streak"),
+                "total_active_days": cal.get("totalActiveDays"),
+                "submission_calendar_json": safe_json(cal.get("submissionCalendar")),
+                "badge_count": len(user.get("badges") or []),
+                "recent_submissions": safe_json(data.get("recentAcSubmissionList"))
+            }).execute()
 
-            # Push to Supabase
-            upsert_to_supabase(user_id, row)
-            print(f"Synced {uname} successfully.\n")
+            # -------- LANGUAGE (BATCH) --------
+            langs = user.get("languageProblemCount") or []
+
+            if langs:
+                supabase.table("language_stats").upsert([
+                    {
+                        "user_id": user_id,
+                        "language_name": l["languageName"],
+                        "problems_solved": l["problemsSolved"]
+                    }
+                    for l in langs
+                ]).execute()
+
+            # -------- TOPICS (BATCH) --------
+            topics = []
+
+            for lvl in ("advanced", "intermediate", "fundamental"):
+                for t in (user.get("tagProblemCounts") or {}).get(lvl) or []:
+                    topics.append({
+                        "user_id": user_id,
+                        "tag_name": t["tagName"],
+                        "difficulty_level": lvl,
+                        "problems_solved": t["problemsSolved"]
+                    })
+
+            if topics:
+                supabase.table("topic_stats").upsert(topics).execute()
+
+            print(f"[DONE] {uname}\n")
 
         except Exception as e:
-            print(f"[ERROR] Failed for {uname}: {e}")
+            print(f"[ERROR] {uname}: {e}")
 
         time.sleep(REQUEST_DELAY)
 
-    print("All users processed successfully.")
-
+    print("All users synced.")
 
 if __name__ == "__main__":
     fetch_and_push()

@@ -1,42 +1,62 @@
-import { useMemo, useState, useCallback, useEffect } from 'react'
-import { GraduationCap, LogOut, Menu, UserCircle2, Lock, Globe } from 'lucide-react'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { LogOut, Menu, UserCircle2, Lock, Globe, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from './ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import ThemeToggle from '@/components/ThemeToggle'
-import { Separator } from './ui/separator'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import ProfileEditorPanel from '@/components/ProfileEditorPanel'
+
+/** Select (and similar) portals render outside the popover DOM; ignore those for dismiss. */
+function isFromRadixSelectPortals(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false
+  return Boolean(
+    target.closest('[data-slot="select-content"]') ||
+      target.closest('[data-radix-select-content]') ||
+      target.closest('[data-radix-popper-content-wrapper]'),
+  )
+}
 
 const ProfileDropdown = ({ handleLogout }: { handleLogout: () => void }) => {
   const { user } = useAuth()
   const [isPrivate, setIsPrivate] = useState<boolean | null>(null)
   const [isToggling, setIsToggling] = useState(false)
+  const [mainMenuOpen, setMainMenuOpen] = useState(false)
+  const [profileEditorOpen, setProfileEditorOpen] = useState(false)
+  const skipMainMenuCloseFocusRef = useRef(false)
+  const [profileSummary, setProfileSummary] = useState<{
+    username: string | null
+    real_name: string | null
+    is_private: boolean | null
+  } | null>(null)
 
-  // Load privacy state from public.users (the single source of truth)
   useEffect(() => {
     if (!user?.id) return
 
     let mounted = true
 
-    const loadPrivacy = async () => {
+    const loadProfile = async () => {
       const { data, error } = await supabase
         .from('users')
-        .select('is_private')
+        .select('username, real_name, is_private')
         .eq('user_id', user.id)
         .single()
 
       if (!error && mounted && data) {
+        setProfileSummary(data)
         setIsPrivate(data.is_private)
       }
     }
 
-    loadPrivacy()
+    loadProfile()
 
     return () => {
       mounted = false
@@ -68,6 +88,14 @@ const ProfileDropdown = ({ handleLogout }: { handleLogout: () => void }) => {
       // RPC return value is the single source of truth
       if (typeof data === 'boolean') {
         setIsPrivate(data)
+        setProfileSummary((current) =>
+          current
+            ? {
+                ...current,
+                is_private: data,
+              }
+            : current,
+        )
         toast.success(data ? 'Profile set to private' : 'Profile set to public', {
           description: data 
             ? 'Your stats are now hidden from the leaderboard.' 
@@ -84,27 +112,39 @@ const ProfileDropdown = ({ handleLogout }: { handleLogout: () => void }) => {
     }
   }, [isToggling, isPrivate])
 
-
-  const realName = useMemo(
-    () => user?.user_metadata?.real_name ?? user?.user_metadata?.full_name ?? user?.email ?? 'Guest',
-    [user],
-  )
-  const username = user?.user_metadata?.username ?? user?.email?.split('@')[0] ?? 'anonymous'
-  const section = user?.user_metadata?.section ?? '—'
-  const semester = user?.user_metadata?.semester ?? '—'
+  const realName = profileSummary?.real_name ?? user?.email ?? 'Guest'
+  const username = profileSummary?.username ?? user?.email?.split('@')[0] ?? 'anonymous'
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="relative flex h-10 w-10 items-center justify-center rounded-md border border-border shadow-sm"
-          aria-label="Open profile menu"
+    <Popover open={profileEditorOpen} onOpenChange={setProfileEditorOpen} modal={false}>
+      <DropdownMenu
+        modal={false}
+        open={mainMenuOpen}
+        onOpenChange={(open) => {
+          setMainMenuOpen(open)
+          if (open) setProfileEditorOpen(false)
+        }}
+      >
+        <PopoverAnchor asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="relative flex h-10 w-10 items-center justify-center rounded-md border border-border shadow-sm"
+              aria-label="Open profile menu"
+            >
+              <Menu className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+        </PopoverAnchor>
+        <DropdownMenuContent
+          className="w-64 mr-4 rounded-xl border-border bg-popover p-0 shadow-lg"
+          onCloseAutoFocus={(e) => {
+            if (skipMainMenuCloseFocusRef.current) {
+              e.preventDefault()
+              skipMainMenuCloseFocusRef.current = false
+            }
+          }}
         >
-          <Menu className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64 mr-4 rounded-xl border-border bg-popover p-0 shadow-lg">
         <div className="flex items-center justify-between gap-3 rounded-t-xl px-4 py-3">
           <div className="flex flex-col">
             <span className="text-base font-semibold text-foreground">{realName}</span>
@@ -117,14 +157,17 @@ const ProfileDropdown = ({ handleLogout }: { handleLogout: () => void }) => {
 
         <DropdownMenuSeparator />
 
-          <div className="flex items-center gap-3 px-4 py-1">
-            <GraduationCap className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            <div className="flex items-center text-sm gap-2">
-              <span className="font-medium text-foreground my-2">Section {section}</span>
-              <Separator orientation="vertical" className="mx-2 h-8 w-0.5 bg-border/80 dark:bg-border/60" />
-              <span className="font-medium text-foreground my-2">Semester {semester}</span>
-            </div>
-          </div>
+        <DropdownMenuItem
+          className="flex items-center justify-between px-4 py-3 text-primary focus:text-primary"
+          onSelect={() => {
+            skipMainMenuCloseFocusRef.current = true
+            // Defer open until after the menu unmount + mouseup, or the popover treats the release as an outside click and closes.
+            window.setTimeout(() => setProfileEditorOpen(true), 0)
+          }}
+        >
+          <span>Go to Profile settings</span>
+          <ArrowRight className="ml-2 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+        </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
@@ -182,7 +225,44 @@ const ProfileDropdown = ({ handleLogout }: { handleLogout: () => void }) => {
           </div>
         </div>
       </DropdownMenuContent>
-    </DropdownMenu>
+      </DropdownMenu>
+
+      <PopoverContent
+        hideArrow
+        side="bottom"
+        align="end"
+        sideOffset={8}
+        alignOffset={-8}
+        className="z-[60] w-[min(calc(100vw-1rem),22rem)] max-h-[min(85vh,32rem)] overflow-y-auto overflow-x-hidden rounded-xl border border-border bg-popover p-0 text-sm text-popover-foreground shadow-lg"
+        onPointerDownOutside={(event) => {
+          const raw =
+            event.detail && typeof event.detail === 'object' && 'originalEvent' in event.detail
+              ? (event.detail as { originalEvent: PointerEvent }).originalEvent.target
+              : (event as unknown as { target?: EventTarget }).target
+          if (isFromRadixSelectPortals(raw ?? null)) {
+            event.preventDefault()
+          }
+        }}
+        onFocusOutside={(event) => {
+          const raw =
+            event.detail && typeof event.detail === 'object' && 'originalEvent' in event.detail
+              ? (event.detail as { originalEvent: FocusEvent }).originalEvent.relatedTarget
+              : null
+          if (isFromRadixSelectPortals(raw)) {
+            event.preventDefault()
+          }
+        }}
+      >
+        <ProfileEditorPanel
+          presentation="dropdown"
+          mode="edit"
+          title="Profile settings"
+          description="Update your profile details."
+          submitLabel="Save changes"
+          showEmail
+        />
+      </PopoverContent>
+    </Popover>
   )
 }
 

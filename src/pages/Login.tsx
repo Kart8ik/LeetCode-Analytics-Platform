@@ -12,8 +12,24 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
   const { isDark } = useAuth()
+  const getNextRoute = async (userId: string) => {
+    const { data: userData } = await supabase
+      .from('users')
+      .select('username')
+      .eq('user_id', userId)
+      .single();
+
+    if (!userData?.username) {
+      navigate('/setup-profile');
+      return;
+    }
+
+    navigate('/leaderboard');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -29,7 +45,7 @@ export default function Login() {
     }
 
     setLoading(true);
-    const { data: _loginData, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
@@ -41,7 +57,25 @@ export default function Login() {
       toast.error(error.message);
     } else {
       toast.success('Login successful!');
-      navigate('/leaderboard');
+      if (data.user?.id) {
+        await getNextRoute(data.user.id);
+      }
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+
+    if (error) {
+      setGoogleLoading(false);
+      toast.error(error.message);
     }
   };
 
@@ -116,6 +150,16 @@ export default function Login() {
                   <span className="bg-background px-2 text-muted-foreground">or</span>
                 </div>
               </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12"
+                onClick={handleGoogleLogin}
+                disabled={googleLoading}
+              >
+                {googleLoading ? <Spinner className="h-4 w-4" /> : 'Continue with Google'}
+              </Button>
             </form>
 
             <div className="text-center text-sm">

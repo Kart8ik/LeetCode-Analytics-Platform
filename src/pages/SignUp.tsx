@@ -5,47 +5,23 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import LoginNavbar from "@/components/LoginNavbar";
 import { useAuth } from "@/context/AuthContext"
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 export default function SignUp() {
   const { isDark } = useAuth()
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-    realName: "",
-    section: "",
-    semester: "",
-    isPrivate: false,
-  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const username = formData.username.trim();
-    const email = formData.email.trim();
-    const password = formData.password;
-
     // Validation
     const isValidEmail = (value: string) => /[^\s@]+@[^\s@]+\.[^\s@]+/.test(value);
-    const isValidUsername = (value: string) => /^[a-zA-Z0-9_]{3,24}$/.test(value);
     const isValidPassword = (value: string) => value.length >= 6;
 
-    if (!isValidUsername(username)) {
-      alert('Username must be 3-24 chars (letters, numbers, _)');
-      return;
-    }
-    if (!isValidEmail(email)) {
+    if (!isValidEmail(email.trim())) {
       alert('Enter a valid email');
       return;
     }
@@ -55,18 +31,9 @@ export default function SignUp() {
     }
 
     setLoading(true);
-    const { data: _signUpData, error } = await supabase.auth.signUp({
-      email,
+    const { error } = await supabase.auth.signUp({
+      email: email.trim(),
       password,
-      options: {
-          data: {
-            username,
-            real_name: formData.realName,
-            section: formData.section,
-            semester: formData.semester,
-            is_private: formData.isPrivate,
-          },
-      },
     });
 
 
@@ -113,31 +80,13 @@ export default function SignUp() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
-                <Label htmlFor="username" className="text-sm font-medium">LeetCode Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  name="username"
-                  placeholder="your-handle"
-                  value={formData.username}
-                  onChange={handleChange}
-                  className="h-12 bg-muted border-0"
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Your leetCode username in your leetcode profile, used to get your coding details, make sure it's correct.
-                </p>
-              </div> 
-
-              <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  name="email"
                   placeholder="you@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="h-12 bg-muted border-0"
                   required
                 />
@@ -151,87 +100,15 @@ export default function SignUp() {
                 <Input
                   id="password"
                   type="password"
-                  name="password"
                   placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="h-12 bg-muted border-0"
                   required
                 />
                 <p className="text-xs text-muted-foreground">
                   Minimum 6 characters. Use a strong password with letters, numbers, and symbols.
                 </p>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="realName" className="text-sm font-medium">Real Name</Label>
-                <Input
-                  id="realName"
-                  type="text"
-                  name="realName"
-                  placeholder="John Doe"
-                  value={formData.realName}
-                  onChange={handleChange}
-                  className="h-12 bg-muted border-0"
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Your full name for identification on the leaderboard.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="section" className="text-sm font-medium">Section</Label>
-                  <Input
-                    id="section"
-                    type="text"
-                    name="section"
-                    placeholder="A"
-                    value={formData.section}
-                    onChange={handleChange}
-                    className="h-12 bg-muted border-0"
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Your class section (e.g., A, B, C).
-                  </p>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="semester" className="text-sm font-medium">Semester</Label>
-                  <Input
-                    id="semester"
-                    type="text"
-                    name="semester"
-                    placeholder="5"
-                    value={formData.semester}
-                    onChange={handleChange}
-                    className="h-12 bg-muted border-0"
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Current semester number (1-8).
-                  </p>
-                </div>
-              </div>
-
-              {/* Public/Private Toggle */}
-              <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-4">
-                <div className="space-y-0.5">
-                  <Label htmlFor="public-toggle" className="text-sm font-medium">
-                    {formData.isPrivate ? "Private Profile" : "Public Profile"}
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    {formData.isPrivate 
-                      ? "Your stats will not be visible on the public leaderboard, only you and your friends can see your stats."
-                      : "Your stats will be visible on the public leaderboard, everyone can see your stats."}
-                  </p>
-                </div>
-                <Switch
-                  id="public-toggle"
-                  checked={formData.isPrivate}
-                  onCheckedChange={(checked) => setFormData({ ...formData, isPrivate: checked })}
-                  className="data-[state=checked]:bg-[#FF6B35]"
-                />
               </div>
 
               <Button

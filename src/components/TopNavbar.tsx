@@ -20,6 +20,8 @@ export default function TopNavbar({ onRegisterNotificationRefresh }: Props) {
   const location = useLocation()
   const navigate = useNavigate()
   const { role, isDark } = useAuth()
+  const isAdmin = role === 'admin'
+  const showUserNavigation = !isAdmin
 
   const navItems = useMemo(
     () => [
@@ -60,12 +62,12 @@ export default function TopNavbar({ onRegisterNotificationRefresh }: Props) {
               className="h-10 w-10 rounded-lg md:h-12 md:w-12"
             />
             <div>
-              {role === 'admin' && (
+              {isAdmin && (
                 <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
                   LeetTrack<span className="text-primary"> Admin</span>
                 </h1>
               )}
-              {role === 'user' && <h1 className="text-2xl font-bold tracking-tight md:text-3xl">LeetTrack</h1>}
+              {!isAdmin && <h1 className="text-2xl font-bold tracking-tight md:text-3xl">LeetTrack</h1>}
               <p className="mt-1 text-sm text-muted-foreground md:text-base hidden sm:block">
                 Track your coding journey with your friends
               </p>
@@ -73,7 +75,7 @@ export default function TopNavbar({ onRegisterNotificationRefresh }: Props) {
           </div>
 
           {/* Center nav - desktop only */}
-          {role === 'user' && (
+          {showUserNavigation && (
             <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 sm:flex">
               <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background">
                 {navItems.map(({ to, label, icon: Icon }) => {
@@ -105,7 +107,7 @@ export default function TopNavbar({ onRegisterNotificationRefresh }: Props) {
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:hidden">
         <div className="flex items-center justify-evenly px-4 py-3">
-          {role === 'user' && (
+          {showUserNavigation && (
             <div className="inline-flex items-center gap-0 rounded-lg border-2 border-secondary bg-background">
               {navItems.map(({ to, label, icon: Icon }) => {
                 const isActive = location.pathname === to

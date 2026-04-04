@@ -26,14 +26,13 @@ type LeaderboardUser = {
   user_id: string
   username: string
   real_name: string
-  section?: string | number
-  semester?: string | number
   easy_solved: number
   medium_solved: number
   hard_solved: number
   total_solved: number
   streak_count: number
   global_rank?: number | null
+  university: string | null
 }
 
 export default function Leaderboard() {
@@ -45,13 +44,12 @@ export default function Leaderboard() {
 
   const [isFiltering, setIsFiltering] = useState<boolean>(false)
   const [query, setQuery] = useState('')
+  const [universityFilter, setUniversityFilter] = useState<string>('all')
 
   const [sortColumn, setSortColumn] = useState<
     'global_rank' | 'total_solved' | 'easy_solved' | 'medium_solved' | 'hard_solved' | 'streak_count'
   >('global_rank')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
-  const [filterSection, setFilterSection] = useState<string | 'all'>('all')
-  const [filterSemester, setFilterSemester] = useState<string | 'all'>('all')
 
   const [showFriendsLeaderboard, setShowFriendsLeaderboard] = useState(false)
   const [removingFriendIds, setRemovingFriendIds] = useState<Set<string>>(new Set())
@@ -233,26 +231,36 @@ export default function Leaderboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showFriendsLeaderboard])
 
-  const sections = useMemo(() => {
-    return Array.from(new Set(leaderboard.map(u => u.section).filter(Boolean))).sort()
-  }, [leaderboard])
-
-  const semesters = useMemo(() => {
-    return Array.from(new Set(leaderboard.map(u => u.semester).filter(Boolean))).sort()
-  }, [leaderboard])
-
   // Use the appropriate data source based on toggle
   const activeLeaderboard = showFriendsLeaderboard ? friendsLeaderboard : leaderboard
+
+  const universities = useMemo(() => {
+    const set = new Set<string>()
+    const source = showFriendsLeaderboard ? friendsLeaderboard : leaderboard
+    source.forEach((u) => {
+      if (u.university) set.add(u.university)
+    })
+    return Array.from(set).sort()
+  }, [leaderboard, friendsLeaderboard, showFriendsLeaderboard])
+
+  useEffect(() => {
+    if (universityFilter !== 'all' && !universities.includes(universityFilter)) {
+      setUniversityFilter('all')
+    }
+  }, [universities, universityFilter])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
 
-    const base = activeLeaderboard.filter(u => {
-      const matchesQuery = [u.real_name, u.username, u.section, u.semester]
-        .some(val => String(val ?? '').toLowerCase().includes(q))
-      const matchesSection = filterSection === 'all' || String(u.section) === String(filterSection)
-      const matchesSemester = filterSemester === 'all' || String(u.semester) === String(filterSemester)
-      return matchesQuery && matchesSection && matchesSemester
+    const base = activeLeaderboard.filter((u) => {
+      const matchesQuery = [u.real_name, u.username].some((val) =>
+        String(val ?? '')
+          .toLowerCase()
+          .includes(q)
+      )
+      const matchesUniversity =
+        universityFilter === 'all' || u.university === universityFilter
+      return matchesQuery && matchesUniversity
     })
 
     // Primary sort by selected column (global_rank special-cased)
@@ -273,7 +281,7 @@ export default function Leaderboard() {
     })
 
     return base
-  }, [activeLeaderboard, query, filterSection, filterSemester, sortColumn, sortOrder])
+  }, [activeLeaderboard, query, sortColumn, sortOrder, universityFilter])
 
   // Show a quick filtering indicator when query/filters/sort change
   useEffect(() => {
@@ -282,7 +290,7 @@ export default function Leaderboard() {
     setIsFiltering(true)
     const id = window.setTimeout(() => setIsFiltering(false), 180)
     return () => clearTimeout(id)
-  }, [query, filterSection, filterSemester, sortColumn, sortOrder, leaderboard, isLoading])
+  }, [query, sortColumn, sortOrder, universityFilter, leaderboard, isLoading])
 
   // Map of DB rank (position in the fetched leaderboard array)
   const dbRankMap = useMemo(() => {
@@ -297,10 +305,9 @@ export default function Leaderboard() {
 
   const clearFilters = () => {
     setQuery('')
-    setFilterSection('all')
-    setFilterSemester('all')
     setSortColumn('global_rank')
     setSortOrder('asc')
+    setUniversityFilter('all')
   }
 
   const downloadCSV = () => {
@@ -310,9 +317,9 @@ export default function Leaderboard() {
     }
 
     const headers = [
-      'rank', 'user_id', 'username', 'real_name', 'easy_solved',
+      'rank', 'user_id', 'username', 'real_name', 'university', 'easy_solved',
       'medium_solved', 'hard_solved', 'total_solved', 'streak_count',
-      'global_rank', 'section', 'semester'
+      'global_rank'
     ]
 
     const rows = filtered.map(u => [
@@ -320,14 +327,13 @@ export default function Leaderboard() {
       u.user_id,
       u.username,
       u.real_name,
+      u.university ?? '-',
       u.easy_solved,
       u.medium_solved,
       u.hard_solved,
       u.total_solved,
       u.streak_count,
-      u.global_rank ?? '-',
-      u.section ?? '-',
-      u.semester ?? '-',
+      u.global_rank ?? '-'
     ])
 
     const csv = [headers, ...rows]
@@ -399,7 +405,21 @@ export default function Leaderboard() {
                   className="pl-9"
                 />
               </div>
-              <div className="flex items-center gap-2 max-sm:w-full">
+              <div className="flex flex-wrap items-center gap-2 max-sm:w-full">
+                <Select value={universityFilter} onValueChange={setUniversityFilter}>
+                  <SelectTrigger size="sm" className="flex-1 md:w-48 min-w-[10rem]">
+                    <SelectValue placeholder="University" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Universities</SelectItem>
+                    {universities.map((u) => (
+                      <SelectItem key={u} value={u}>
+                        {u}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
                 <Select
                   value={sortColumn}
                   onValueChange={(v: string) => setSortColumn(v as typeof sortColumn)}
@@ -430,35 +450,6 @@ export default function Leaderboard() {
 
               {role === 'admin' && (
                 <>
-                  <Select
-                    value={filterSection}
-                    onValueChange={(v: string) => setFilterSection((v as string) || 'all')}
-                  >
-                    <SelectTrigger size="sm" className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Sections</SelectItem>
-                      {sections.map(s => (
-                        <SelectItem key={s} value={String(s)}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    value={filterSemester}
-                    onValueChange={(v: string) => setFilterSemester((v as string) || 'all')}
-                  >
-                    <SelectTrigger size="sm" className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Semesters</SelectItem>
-                      {semesters.map(s => (
-                        <SelectItem key={s} value={String(s)}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
 
                   <Button variant="secondary" onClick={clearFilters}>
                     Clear Filters
@@ -502,16 +493,24 @@ export default function Leaderboard() {
                   </div>
                 )}
 
+                {filtered.length === 0 ? (
+                  <div className="py-20 flex items-center justify-center">
+                    <div className="text-center">
+                      <Search className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
+                      <div className="text-sm text-muted-foreground">No users found</div>
+                    </div>
+                  </div>
+                ) : (
                 <table className={`min-w-[900px] w-full border-collapse text-sm ${isFiltering ? 'opacity-60' : ''}`}>
                   <thead>
                     <tr className="text-muted-foreground bg-muted/40 text-center">
                       <th className="py-3 px-3 text-left">Rank</th>
-                      <th className="py-3 px-3 text-left sm:w-[40%] w-auto">Leader</th>
+                      <th className="py-3 px-3 text-left sm:w-[32%] w-auto">Leader</th>
                       <th className="py-3 px-3 text-center">Global Rank</th>
+                      <th className="py-3 px-3 text-left min-w-[8rem]">University</th>
                       <th className="py-3 px-3 text-center">E,M,H</th>
                       <th className="py-3 px-3 text-center">Total</th>
                       <th className="py-3 px-3 text-center">Streak</th>
-                      <th className="py-3 px-3 text-center">Sem Sec</th>
                       {showFriendsLeaderboard && (
                         <th className="py-3 px-3 text-center"></th>
                       )}
@@ -521,9 +520,6 @@ export default function Leaderboard() {
                     {filtered.map((user, _idx) => {
                       const dbRankNum = dbRankMap.get(user.user_id)
                       const dbRank = dbRankNum ?? '-'
-                      const sem = user.semester ?? ''
-                      const sec = user.section ?? ''
-                      const semSec = sem || sec ? `${sem}${sem && sec ? ' ' : ''}${sec}` : '-'
                       const highlight = dbRankNum === 1
                         ? 'bg-yellow-50 dark:bg-yellow-900/10'
                         : dbRankNum === 2
@@ -559,7 +555,7 @@ export default function Leaderboard() {
                             </div>
                           </td>
 
-                          <td className="py-3 text-left sm:w-[50%] w-auto">
+                          <td className="py-3 text-left sm:w-[36%] w-auto">
                             <div>
                               <div className="font-medium truncate max-w-[600px]">{user.real_name}</div>
                               <div className="text-xs text-muted-foreground">@{user.username}</div>
@@ -567,6 +563,10 @@ export default function Leaderboard() {
                           </td>
 
                           <td className="py-3 text-center">{user.global_rank ?? '-'}</td>
+
+                          <td className="py-3 px-3 text-left text-muted-foreground">
+                            <span className="line-clamp-2 text-sm">{user.university ?? '-'}</span>
+                          </td>
 
                           <td className="py-3 text-center">
                             <div className="inline-flex items-center gap-2">
@@ -578,7 +578,6 @@ export default function Leaderboard() {
 
                           <td className="font-semibold">{user.total_solved}</td>
                           <td>{user.streak_count}</td>
-                          <td>{semSec}</td>
                           {showFriendsLeaderboard && (
                             <td className="py-3 px-3 text-center">
                               {user.user_id !== authUser?.id && (
@@ -606,6 +605,7 @@ export default function Leaderboard() {
                     })}
                   </tbody>
                 </table>
+                )}
               </>
             )}
           </CardContent>

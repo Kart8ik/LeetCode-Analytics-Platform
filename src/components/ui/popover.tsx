@@ -34,7 +34,21 @@ function PopoverTrigger({ ...props }: React.ComponentProps<typeof PopoverPrimiti
   return <PopoverPrimitive.Trigger {...props} />
 }
 
-function PopoverContent({ className, sideOffset = 0, children, ...props }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
+  return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />
+}
+
+type PopoverContentProps = React.ComponentProps<typeof PopoverPrimitive.Content> & {
+  hideArrow?: boolean
+}
+
+function PopoverContent({
+  className,
+  sideOffset = 0,
+  children,
+  hideArrow,
+  ...props
+}: PopoverContentProps) {
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
@@ -47,7 +61,9 @@ function PopoverContent({ className, sideOffset = 0, children, ...props }: React
         {...(props as any)}
       >
         {children}
-        <PopoverPrimitive.Arrow className="bg-primary fill-primary z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px]" />
+        {!hideArrow && (
+          <PopoverPrimitive.Arrow className="bg-primary fill-primary z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px]" />
+        )}
       </PopoverPrimitive.Content>
     </PopoverPrimitive.Portal>
   )
@@ -57,4 +73,4 @@ function PopoverClose({ ...props }: React.ComponentProps<typeof PopoverPrimitive
   return <PopoverPrimitive.Close {...props} />
 }
 
-export { Popover, PopoverTrigger, PopoverContent, PopoverClose }
+export { Popover, PopoverTrigger, PopoverAnchor, PopoverContent, PopoverClose }

@@ -11,6 +11,7 @@ interface AuthContextType {
     loading: boolean;
     role: string | null;
     isDark: boolean;
+    setLoading: (loading: boolean) => void;
     toggleTheme: () => void;
 }
 
@@ -20,6 +21,7 @@ const AuthContext = createContext<AuthContextType>({
     loading: true,
     role: null,
     isDark: false,
+    setLoading: () => {},
     toggleTheme: () => {},
 });
 
@@ -133,7 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const toggleTheme = () => setIsDark((prev) => !prev);
 
     return (
-        <AuthContext.Provider value={{ session, user, loading, role, isDark, toggleTheme }}>
+        <AuthContext.Provider value={{ session, user, loading, setLoading, role, isDark, toggleTheme }}>
             {children}
         </AuthContext.Provider>
     );
